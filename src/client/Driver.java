@@ -15,13 +15,16 @@ public class Driver {
         String ID = sc.nextLine();
         Client_Handler handler = new Client_Handler(ID);
         Registry registry = LocateRegistry.getRegistry(2964);
-        Interface_server obj = (Interface_server) registry.lookup("Concordia");
-        String init_resp = obj.verify(ID);
-        if (init_resp == "False") {
+        Interface_server objCo = (Interface_server) registry.lookup("CONCORDIA");
+        String init_resp = objCo.verify(ID);
+        if (init_resp.matches(".*incorrect*.")) {
+            System.out.println(init_resp);
             System.out.println("You are not a registered user please contact your manager");
         } else {
-
+            System.out.println(init_resp);
         }
+        System.out.println(objCo.findItem("CONU1234", "light"));
+        System.out.println(objCo.borrowItem("CONU1234","CON6000", 3));
 
     }
 
