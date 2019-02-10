@@ -12,6 +12,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     private HashMap<String, HashMap> libLendingRec;
     private HashMap waitlistRec;
     private HashMap libBooksRec;
+    private HashMap<String, String> syncHeap;
 
     public HashMap<String, ArrayList<String>> getUserUpdateMessages() {
         return userUpdateMessages;
@@ -19,6 +20,19 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     public void setUserUpdateMessages(HashMap<String, ArrayList<String>> userUpdateMessages) {
         this.userUpdateMessages = userUpdateMessages;
+    }
+
+    public String getUserMessageStr(String userID){
+        HashMap<String, ArrayList<String>> msgHolder = new HashMap<String, ArrayList<String>>();
+        ArrayList<String> valueHolder = msgHolder.get(userID);
+        int i =0;
+        String returnString = "";
+        while(i< valueHolder.size())
+        {
+            returnString = returnString + valueHolder.get(i) + "\n";
+        }
+        return returnString;
+
     }
 
     public Server_Base(String name) throws RemoteException {
@@ -187,7 +201,13 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 getLibBooksRec().remove(itemID);
                 System.out.println("Remove from the library borrow records");
                 getLibLendingRec().remove(itemID);
-                for (int i = 0; i < ((ArrayList<String>) getLibLendingRec().get(itemID)).size(); i++)
+                ArrayList<String> tempUsers = getLendingDetail(itemID);
+                for (int i = 0; i < tempUsers.size(); i++){
+                    msg = "The item "+ itemID +" has been completely removed from the library. All the copies are being recalled + please retunn back.\n";
+                    updateMessageHash(msg, tempUsers.get(i));
+                    msg = "";
+
+                }
                     System.out.println("Notify all the borrowers to return back");
                 System.out.println("The item has been completely removed from the library.");
                 return ("The item has been removed from the library availability list.\nAll the borrowers are notified to return back.\n");
@@ -384,7 +404,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         }
         try {
             if (userUpdateMessages.containsKey(ID)) {
-                finalString = finalString + " You have one message from the server.\n" + userUpdateMessages.get(ID) + "\n";
+                finalString = finalString + " You have one message from the server.\n" + getUserMessageStr((ID)) + "\n";
             } else {
                 finalString = finalString + "The ID has vaild user type.\n";
             }
@@ -393,14 +413,19 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             System.out.println("No new messages for you");
         }
         if (ID.substring(3, 4).equals("M")) {
-            finalString = finalString + "Your options are: \n+ 1. Press 1 for adding an item to the library.\n";
+            finalString = finalString + "Your options are: \n1. Press 1 for adding an item to the library.\n";
             finalString = finalString + "2. Press 2 for removing an item from the library.\n";
             finalString = finalString + "3. Press 3 for checking the available list of items.\n";
+            finalString = finalString + "0. Press 0 for exit.\n";
+
         }
         if (ID.substring(3, 4).equals("U")) {
-            finalString = finalString + "Your options are: \n+ 1. Press 4 for borrowing an item.\n";
-            finalString = finalString + "2. Press 5 for finding an item.\n";
-            finalString = finalString + "3. Press 6 for removing an item\n";
+            finalString = finalString + "Your options are: \n+ 1. Press 1 for borrowing an item.\n";
+            finalString = finalString + "2. Press 2 for finding an item.\n";
+            finalString = finalString + "3. Press 3 for returning an item\n";
+            finalString = finalString + "0. Press 0 for exit.\n";
+            finalString = finalString + "Note: Only select the borrow and remove options if you know the correct item ID.\n";
+            finalString = finalString + "Else you can lookup using our find item feature.\n";
         }
 
 
@@ -443,6 +468,14 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             return returnParm;
         }
 
+    }
+
+    public HashMap<String, String> getSyncHeap() {
+        return syncHeap;
+    }
+
+    public void setSyncHeap(HashMap<String, String> syncHeap) {
+        this.syncHeap = syncHeap;
     }
 
     public ArrayList<String> getWaitdetail(String ID) {
