@@ -411,7 +411,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             }
                             }
 
-                            }
+
         if ((userID.substring(3, 4).equals("U")) && itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
             if (getLibBooksRec().containsKey(itemID)) {
 
