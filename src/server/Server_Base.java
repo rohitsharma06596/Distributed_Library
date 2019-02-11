@@ -387,64 +387,56 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         String finalString = "";
         if (userID.substring(3, 4).equals("U")) {
             if (itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
-                if(getLibBooksRec().containsKey(itemID)) {
-                        ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
-                        getLibBooksRec().remove(itemID);
-                        getSyncHeap().put(itemID, userID);
-                         if (getLibLendingRec().containsKey(itemID)) {
-                              ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
-                              getLibLendingRec().remove(itemID);
-                            if (!(lendHolder.contains(userID))) {
+                if (getLibBooksRec().containsKey(itemID)) {
+                    ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
+                    getLibBooksRec().remove(itemID);
+                    getSyncHeap().put(itemID, userID);
+                    if (getLibLendingRec().containsKey(itemID)) {
+                        ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
+                        getLibLendingRec().remove(itemID);
+                        if (!(lendHolder.contains(userID))) {
+                            getLibLendingRec().put(itemID, lendHolder);
+                            getLibBooksRec().put(itemID, bRecHolder);
+                            getSyncHeap().remove(itemID);
+                            return "Officially, you don't have a copy of this item. So you cannot return. Please contact your manager";
+                        } else {
+                            if (getWaitlistRec().containsKey(itemID)) {
+                                ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                                getWaitlistRec().remove(itemID);
+                                lendHolder.remove(userID);
+                                lendHolder.add(waitHolder.get(0));
+                                updateMessageHash("Your waitlist for the item " + itemID + " is clear + the item has been issued to you", waitHolder.get(0));
+                                System.out.println("The book has been issued to the first waitlisted person.");
+                                waitHolder.remove(waitHolder.get(0));
+                                finalString = finalString + "The book has been succedssfully returned\n";
                                 getLibLendingRec().put(itemID, lendHolder);
                                 getLibBooksRec().put(itemID, bRecHolder);
+                                getWaitlistRec().put(itemID, waitHolder);
                                 getSyncHeap().remove(itemID);
-                                return "You don't have a copy of this item. So you cannot return";
+                            } else {
+                                bRecHolder.set(1, Integer.toString(Integer.parseInt(bRecHolder.get(1)) + 1));
+                                lendHolder.remove(userID);
+                                getLibBooksRec().put(itemID, bRecHolder);
+                                getLibLendingRec().put(itemID, lendHolder);
+                                getSyncHeap().remove(itemID);
+                                finalString = finalString + "The item has been added to the library bank.\n";
                             }
-                            else
-                            {
-                                if(getWaitlistRec().containsKey(itemID)){
-                                    ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                        }
 
-                                }
-                            }
-
-                            }
-                            }
-
-
-        if ((userID.substring(3, 4).equals("U")) && itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
-            if (getLibBooksRec().containsKey(itemID)) {
-
-                if ((parmHolder.get(1) != "0") && (lendHolder.contains(userID))) {
-                    getLibBooksRec().remove(itemID);
-                    parmHolder.set(1, Integer.toString(Integer.parseInt(parmHolder.get(1)) + 1));
-                    getLibLendingRec().remove(itemID);
-                    lendHolder.remove(userID);
-                    getLibLendingRec().put(itemID, lendHolder);
-                    finalString = finalString + "The item has been added to the library bank.\n";
-                } else if (!(lendHolder.contains(userID))) {
-                    return "You dont owe this item to the library" + getServername();
-                } else if (parmHolder.get(1) == "0") {
-                    if (waitHolder.get(0) == "null") {
-                        getLibBooksRec().remove(itemID);
-                        parmHolder.set(1, Integer.toString(Integer.parseInt(parmHolder.get(1)) + 1));
-                        getLibLendingRec().remove(itemID);
-                        lendHolder.remove(userID);
-                        getLibLendingRec().put(itemID, lendHolder);
-                        finalString = finalString + "The item has been added to the library bank.\n";
                     } else {
-                        finalString = finalString + borrowItem(waitHolder.get(0), itemID, 3);
-                        finalString = finalString + "The book has been issued to the first waitlisted person";
+                        getLibBooksRec().put(itemID, bRecHolder);
+                        getSyncHeap().remove(itemID);
+                        return "Officially, you don't have a copy of this item. So you cannot return. Please contact your manager";
                     }
-
+                } else {
+                    return "This book ID does not exist in the library " + getServername();
                 }
+            } else {
+                System.out.println("Make a appropriate UDP call for the inter server item list update");
             }
-        } else {
-            if (!(userID.substring(3, 4).equals("U"))) {
+        }
+        else {
                 finalString = finalString + "The User is not authorized for this action\n";
-            } else if ((lendHolder.contains(userID))) {
-                System.out.println("Set UDP call for returning to other libraries");
-            }
         }
 
         return finalString;

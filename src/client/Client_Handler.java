@@ -202,9 +202,10 @@ public class Client_Handler {
                         }while(interacString != "The record for this item is currently being used by another user\n");
                         System.out.println("The previous user's actions a re completed, your action will be performed next.\n");
                     }
-                    else
-                    {
-                        if(interacString.contains("Would you like to be added to the waitlist? Enter Y for Yes and N for No"))
+                    else {
+                        System.out.println(interacString);
+                    }
+                    if(interacString.contains("Would you like to be added to the waitlist? Enter Y for Yes and N for No"))
                         {
                             String resp = sc.nextLine();
                             if(resp == "Y")
@@ -213,12 +214,11 @@ public class Client_Handler {
                             }
 
                         }
-                        else
-                        {
+                    else {
                             System.out.println(interacString);
-                        }
                     }
-                }else if(input == 2)
+                }
+                else if(input == 2)
                 {
                     System.out.println("Please enter the item name you want to search for in the library: ");
                     String itemName = sc.nextLine();
@@ -232,35 +232,24 @@ public class Client_Handler {
                     interacString = objCo.returnItem(client.getTotalID(),itemID);
                     System.out.println(interacString);
                     System.out.println("The call is being made to the server...");
-                    interacString = objCo.borrowItem(client.getTotalID(), itemID, days);
+                    interacString = objCo.returnItem(client.getTotalID(),itemID);
                     if(interacString.equalsIgnoreCase("The record for this item is currently being used by another user\n"))
                     {
                         System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
 
                         do{
-                            interacString = objCo.borrowItem(client.getTotalID(),itemID,days);
+                            interacString = objCo.returnItem(client.getTotalID(),itemID);
                             System.out.println(interacString);
                             System.out.println("The record for this item is still being used by another user\n");
                             System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
 
                         }while(interacString != "The record for this item is currently being used by another user\n");
-                        System.out.println("The previous user's actions a re completed, your action will be performed next.\n");
+                        System.out.println("The previous user's actions are completed, your action will be performed next.\n");
+                        System.out.println(interacString);
                     }
                     else
                     {
-                        if(interacString.contains("Would you like to be added to the waitlist? Enter Y for Yes and N for No"))
-                        {
-                            String resp = sc.nextLine();
-                            if(resp == "Y")
-                            {
-                                System.out.println("CAll the waitlist methood in the server");
-                            }
-
-                        }
-                        else
-                        {
                             System.out.println(interacString);
-                        }
                     }
 
                 }
