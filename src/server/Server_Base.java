@@ -419,7 +419,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 getLibBooksRec().put(itemID, bRecHolder);
                                 getLibLendingRec().put(itemID, lendHolder);
                                 getSyncHeap().remove(itemID);
-                                finalString = finalString + "The item has been added to the library bank.\n";
+                                finalString = finalString + "The item has been added to the library.\n";
                             }
                         }
 
