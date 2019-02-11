@@ -106,7 +106,22 @@ public class Client_Handler {
                     int quantity = sc.nextInt();
                     System.out.println("The call is being made to the server...");
                     interacString = objCo.addItem(client.getTotalID(), itemID, itemName, quantity);
-                    System.out.println(interacString);
+                    if(interacString.equalsIgnoreCase("The record for this item is currently being used by another user"))
+                    {
+                        System.out.println("We will try to connect the  server again in a few seconds, please wait...");
+
+                        do{
+                            interacString = objCo.addItem(client.getTotalID(), itemID, itemName, quantity);
+                            System.out.println("The record for this item is still being used by another user");
+                            System.out.println("We will try to connect the  server again in a few seconds, please wait...");
+
+                        }while(interacString != "The record for this item is currently being used by another user");
+                        System.out.println(interacString);
+                    }
+                    else
+                    {
+                        System.out.println(interacString);
+                    }
                 }
                 else if(input == 2)
                 {
@@ -114,6 +129,7 @@ public class Client_Handler {
                     String itemID = sc.nextLine();
                     System.out.println("Please enter the quantity you want to reduce or enter 0 for complete removal: ");
                     int quantity = sc.nextInt();
+                    System.out.println("The call is being made to the server...");
                     if(quantity == 0)
                     {
                         interacString = objCo.removeItem(client.getTotalID(),itemID,quantity,true);
@@ -124,6 +140,32 @@ public class Client_Handler {
                         interacString = objCo.removeItem(client.getTotalID(),itemID,quantity,false);
                         System.out.println(interacString);
                     }
+                    if(interacString.equalsIgnoreCase("The record for this item is currently being used by another user"))
+                    {
+                        System.out.println("We will try to connect the  server again in a few seconds, please wait...");
+
+                        do{
+                            if(quantity == 0)
+                            {
+                                interacString = objCo.removeItem(client.getTotalID(),itemID,quantity,true);
+                                System.out.println(interacString);
+                            }
+                            else
+                            {
+                                interacString = objCo.removeItem(client.getTotalID(),itemID,quantity,false);
+                                System.out.println(interacString);
+                            }
+                            System.out.println("The record for this item is still being used by another user");
+                            System.out.println("We will try to connect the  server again in a few seconds, please wait...");
+
+                        }while(interacString != "The record for this item is currently being used by another user");
+                        System.out.println(interacString);
+                    }
+                    else
+                    {
+                        System.out.println(interacString);
+                    }
+
 
                 }
                 else if(input == 3)
@@ -133,7 +175,7 @@ public class Client_Handler {
                 }
                 else if(input == 0)
                 {
-                    System.out.println("Thanks for using our services. :))");
+                    System.out.println("Thank-you for using our services. :)");
                     return;
                 }
             }
@@ -147,7 +189,35 @@ public class Client_Handler {
                     int days = sc.nextInt();
                     System.out.println("The call is being made to the server...");
                     interacString = objCo.borrowItem(client.getTotalID(), itemID, days);
-                    System.out.println(interacString);
+                    if(interacString.equalsIgnoreCase("The record for this item is currently being used by another user\n"))
+                    {
+                        System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
+
+                        do{
+                            interacString = objCo.borrowItem(client.getTotalID(),itemID,days);
+                            System.out.println(interacString);
+                            System.out.println("The record for this item is still being used by another user\n");
+                            System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
+
+                        }while(interacString != "The record for this item is currently being used by another user\n");
+                        System.out.println("The previous user's actions a re completed, your action will be performed next.\n");
+                    }
+                    else
+                    {
+                        if(interacString.contains("Would you like to be added to the waitlist? Enter Y for Yes and N for No"))
+                        {
+                            String resp = sc.nextLine();
+                            if(resp == "Y")
+                            {
+                                System.out.println("CAll the waitlist methood in the server");
+                            }
+
+                        }
+                        else
+                        {
+                            System.out.println(interacString);
+                        }
+                    }
                 }else if(input == 2)
                 {
                     System.out.println("Please enter the item name you want to search for in the library: ");
@@ -161,16 +231,47 @@ public class Client_Handler {
                     String itemID = sc.nextLine();
                     interacString = objCo.returnItem(client.getTotalID(),itemID);
                     System.out.println(interacString);
+                    System.out.println("The call is being made to the server...");
+                    interacString = objCo.borrowItem(client.getTotalID(), itemID, days);
+                    if(interacString.equalsIgnoreCase("The record for this item is currently being used by another user\n"))
+                    {
+                        System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
+
+                        do{
+                            interacString = objCo.borrowItem(client.getTotalID(),itemID,days);
+                            System.out.println(interacString);
+                            System.out.println("The record for this item is still being used by another user\n");
+                            System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
+
+                        }while(interacString != "The record for this item is currently being used by another user\n");
+                        System.out.println("The previous user's actions a re completed, your action will be performed next.\n");
+                    }
+                    else
+                    {
+                        if(interacString.contains("Would you like to be added to the waitlist? Enter Y for Yes and N for No"))
+                        {
+                            String resp = sc.nextLine();
+                            if(resp == "Y")
+                            {
+                                System.out.println("CAll the waitlist methood in the server");
+                            }
+
+                        }
+                        else
+                        {
+                            System.out.println(interacString);
+                        }
+                    }
 
                 }
 
                 else if(input == 0)
                 {
-                    System.out.println("Thanks for using our services. :)");
+                    System.out.println("Thank-you for using our services. :)");
                     return;
                 }
             }
-            System.out.println("Enter Yes for continue doing more operations and No to quit.\n");
+            System.out.println("Enter \"Yes\" for continue doing more operations and \"No\" to quit.\n");
             String check = sc.nextLine();
             boolean exitParm = false;
             do {

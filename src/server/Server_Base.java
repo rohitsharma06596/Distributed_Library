@@ -15,7 +15,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     private HashMap<String, String> syncHeap;
 
     public HashMap<String, ArrayList<String>> getUserUpdateMessages() {
-        return userUpdateMessages;
+        return this.userUpdateMessages;
     }
 
     public void setUserUpdateMessages(HashMap<String, ArrayList<String>> userUpdateMessages) {
@@ -23,7 +23,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     }
 
     public String getUserMessageStr(String userID){
-        HashMap<String, ArrayList<String>> msgHolder = new HashMap<String, ArrayList<String>>();
+        HashMap<String, ArrayList<String>> msgHolder = getUserUpdateMessages();
         ArrayList<String> valueHolder = msgHolder.get(userID);
         int i =0;
         String returnString = "";
@@ -41,7 +41,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
 
     public HashMap getLibBooksRec() {
-        return libBooksRec;
+        return this.libBooksRec;
     }
 
     public void setLibBooksRec(HashMap libBooksRec) {
@@ -49,7 +49,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     }
 
     public HashMap getLibLendingRec() {
-        return libLendingRec;
+        return this.libLendingRec;
     }
 
     public void setLibLendingRec(HashMap libLendingRec) {
@@ -58,7 +58,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
 
     public HashMap getWaitlistRec() {
-        return waitlistRec;
+        return this.waitlistRec;
     }
 
     public void setWaitlistRec(HashMap waitlistRec) {
@@ -66,7 +66,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     }
 
     public String getServername() {
-        return servername;
+        return this.servername;
     }
 
     public void setServername(String servername) {
@@ -161,6 +161,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
         } else {
             System.out.println("Server is invalid");
+            return null;
         }
         return xLib;
     }
@@ -173,13 +174,19 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             if (getLibBooksRec().containsKey(itemID)) {
                 System.out.println(getLibBooksRec().get(itemID));
                 ArrayList<String> value = (ArrayList<String>) getLibBooksRec().get(itemID);
+                this.syncHeap.put(itemID,managerID);
                 getLibBooksRec().remove(itemID);
                 System.out.println(value.get(0) + " " + value.get(1));
                 getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + quantity))));
+                this.syncHeap.remove(itemID);
                 return ("This item is already listed in the library the quantity has been updated");
 
 
-            } else {
+            } else if(syncHeap.containsKey(itemID)) {
+                return("The record for this item is currently being used by another user please try after sometime");
+            }
+            else
+            {
                 getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemID, Integer.toString(quantity))));
                 return ("This item was not listed in the library a new entry has been made for this with the provided quantity");
             }
@@ -193,27 +200,35 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     public String removeItem(String managerID, String itemID, int quantity, boolean completeRemove) {
         if (managerID.substring(3, 4).equals("M")) {
 
-            if (getLibBooksRec().get(itemID) == null) {
-                System.out.println("The item does not exist in the library");
-                return ("The item has not been listed in the library");
+            if (!getLibBooksRec().containsKey(itemID)) {
+                if(syncHeap.containsKey(itemID)){
+                    return("The record for this item is currently being used by another user please try after sometime");
+                }
+                else {
+                    System.out.println("The item does not exist in the library");
+                    return ("The item has not been listed in the library");
+                }
             } else if (completeRemove == true) {
                 String msg = "";
+                syncHeap.put(itemID,managerID);
                 getLibBooksRec().remove(itemID);
-                System.out.println("Remove from the library borrow records");
-                getLibLendingRec().remove(itemID);
+                System.out.println("Removed from the library borrow records");
                 ArrayList<String> tempUsers = getLendingDetail(itemID);
+                getLibLendingRec().remove(itemID);
                 for (int i = 0; i < tempUsers.size(); i++){
-                    msg = "The item "+ itemID +" has been completely removed from the library. All the copies are being recalled + please retunn back.\n";
+                    msg = "The item "+ itemID +" has been completely removed from the library. All the copies are being recalled + please return back the item.\n";
                     updateMessageHash(msg, tempUsers.get(i));
                     msg = "";
 
                 }
-                    System.out.println("Notify all the borrowers to return back");
+                syncHeap.remove(itemID);
+                System.out.println("Notified all the borrowers to return back");
                 System.out.println("The item has been completely removed from the library.");
                 return ("The item has been removed from the library availability list.\nAll the borrowers are notified to return back.\n");
             } else {
                 System.out.println(getLibBooksRec().get(itemID));
                 ArrayList<String> value = (ArrayList<String>) getLibBooksRec().get(itemID);
+                syncHeap.put(itemID,managerID);
                 getLibBooksRec().remove(itemID);
                 System.out.println(value.get(0) + " " + value.get(1));
                 if (Integer.parseInt(value.get(1)) > quantity) {
@@ -222,7 +237,8 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     System.out.println("The appropriate amount of item have been removed from the unborrowed section");
                     return "The appropriate amount of item have been removed from the unborrowed section";
                 } else {
-                    getLibBooksRec().remove(itemID);
+                    getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), "0")));
+                    syncHeap.remove(itemID,managerID);
                     System.out.println("The item has been removed from the unborrowed section, nothing is left");
                     return "The item has been removed from the unborrowed section, nothing is left";
                 }
@@ -258,68 +274,94 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         String finalString = "";
         if (userID.substring(3, 4).equals("U")) {
             if (itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
-                ArrayList<String> lendHolder = (ArrayList<String>) getLendingDetail(itemID);
-                ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
-                if ((bRecHolder.get(0) != "null") && (bRecHolder.get(1) != "0")) {
-
-                    if (lendHolder.get(0) != "null") {
-                        if (lendHolder.contains(userID)) {
-                            return "You aleady have a copy of this item";
+                if(getLibBooksRec().containsKey(itemID)) {
+                    ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
+                    getLibBooksRec().remove(itemID);
+                    getSyncHeap().put(itemID, userID);
+                    if (getLibLendingRec().containsKey(itemID)) {
+                        ArrayList<String> lendHolder = (ArrayList<String>) getLendingDetail(itemID);
+                        getLibLendingRec().remove(itemID);
+                        if (bRecHolder.get(1) != "0") {
+                            if (lendHolder.contains(userID)) {
+                                getLibLendingRec().put(itemID, lendHolder);
+                                getLibBooksRec().put(itemID, bRecHolder);
+                                getSyncHeap().remove(itemID);
+                                return "You already have a copy of this item";
+                            } else {
+                                lendHolder.add(userID);
+                                getLibLendingRec().put(itemID, lendHolder);
+                                System.out.println("Lending history has been updated");
+                                finalString = finalString + "Lending history has been updated you have successfully borrowed. \n";
+                                bRecHolder.set(1, Integer.toString(Integer.parseInt(bRecHolder.get(1)) - 1));
+                                getLibBooksRec().put(itemID, bRecHolder);
+                                System.out.println("The book record has been updated");
+                                finalString = finalString + "The book record has been updated. \n";
+                                getSyncHeap().remove(itemID, userID);
+                            }
                         } else {
-                            getLibLendingRec().remove(itemID);
+                            if (bRecHolder.get(1) == "0") {
+                                getLibLendingRec().put(itemID, lendHolder);
+                                getLibBooksRec().put(itemID, bRecHolder);
+                                getSyncHeap().remove(itemID, userID);
+                                finalString = finalString + ("The item is currently not available\n");
+                                finalString = finalString + ("Would you like to be added to the waitlist? Enter Y for Yes and N for No.\n");
+                                return finalString;
+                            } else {
+                                getLibLendingRec().put(itemID, lendHolder);
+                                getLibBooksRec().put(itemID, bRecHolder);
+                                getSyncHeap().remove(itemID, userID);
+                                return ("Internal data error!");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (bRecHolder.get(1) != "0") {
+                            ArrayList<String> lendHolder = new ArrayList<String>();
+                            System.out.println(bRecHolder);
+                            lendHolder.set(0, bRecHolder.get(0));
                             lendHolder.add(userID);
                             getLibLendingRec().put(itemID, lendHolder);
                             System.out.println("Lending history has been updated");
                             finalString = finalString + "Lending history has been updated. \n";
-                            getLibBooksRec().remove(itemID);
                             bRecHolder.set(1, Integer.toString(Integer.parseInt(bRecHolder.get(1)) - 1));
                             getLibBooksRec().put(itemID, bRecHolder);
                             System.out.println("The book record has been updated");
                             finalString = finalString + "The book record has been updated. \n";
+                            getSyncHeap().remove(itemID, userID);
                         }
-                    } else {
-                        System.out.println(lendHolder);
-                        System.out.println(bRecHolder);
-                        lendHolder.set(0, bRecHolder.get(0));
-                        lendHolder.add(userID);
-                        getLibLendingRec().put(itemID, lendHolder);
-                        System.out.println("Lending history has been updated");
-                        finalString = finalString + "Lending history has been updated. \n";
-                        getLibBooksRec().remove(itemID);
-                        bRecHolder.set(1, Integer.toString(Integer.parseInt(bRecHolder.get(1)) - 1));
-                        getLibBooksRec().put(itemID, bRecHolder);
-                        System.out.println("The book record has been updated");
-                        finalString = finalString + "The book record has been updated. \n";
-                    }
-                } else if (bRecHolder.get(0) == "null") {
-                    System.out.println("The item does not exist in the library " + getServername());
-                    finalString = finalString + "The item does not exist in the library " + getServername() + "\n";
-                } else if (bRecHolder.get(1) == "0") {
-                    System.out.println(" call the client to check if he wants to be added to waitlist");
-                    finalString = finalString + "Would you like to add yourself to the waitlist?" + "\n";
-                    if (getWaitdetail(itemID).get(0) == "null") {
-                        System.out.println("This item is just listed on " + getServername() + "has never been borrowed");
-                        finalString = finalString + "This item is just listed on " + getServername() + "has never been borrowed. \n";
-                        finalString = finalString + "You cannot be added to the waitlist.\n";
-                    } else {
-                        getWaitlistRec().put(itemID, userID);
-                        finalString = finalString + "A new waiting list has been created for the item for you";
-                        finalString = finalString + "The item is currently unavailable" + "\n";
-                    }
+                        else
+                        {
+                            getLibBooksRec().put(itemID, bRecHolder);
+                            getSyncHeap().remove(itemID, userID);
+                            if (bRecHolder.get(1) == "0") {
+                                finalString = finalString + ("The item is currently not available\n");
+                                finalString = finalString + ("Would you like to be added to the waitlist?\n");
+                                finalString = finalString + ("Enter Y for Yes and N for No");
+                                return finalString;
+                            } else {
+                                return ("Internal data error!");
+                            }
+
+                        }
                 }
-
-            } else {
-                System.out.println("UDP for calling the correct server on the client's behalf");
-                finalString = finalString + "This item does not exist at " + getServername() + ".\n";
             }
-        } else {
-            System.out.println("The User is not authorized for this action");
-            return ("The User is not authorized for this action");
-        }
+                else{
+                System.out.println("The item does not exist in the library " + getServername());
+                finalString = finalString + "The item does not exist in the library " + getServername() + "\n";
+            }
 
+        } else {
+            System.out.println("UDP for calling the correct server on the client's behalf");
+            finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+        }
+    } else {
+        System.out.println("The User is not authorized for this action");
+        return ("The User is not authorized for this action");
+    }
         return finalString;
 
-    }
+}
 
     public String findItem(String userID, String itemName) {
         String finalString = "Items matching your entry at " + getServername() + " are:\n";
@@ -343,9 +385,33 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     public String returnItem(String userID, String itemID) {
         String finalString = "";
-        ArrayList<String> parmHolder = getBookDetail(itemID);
-        ArrayList<String> lendHolder = getLendingDetail(itemID);
-        ArrayList<String> waitHolder = getWaitdetail(itemID);
+        if (userID.substring(3, 4).equals("U")) {
+            if (itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
+                if(getLibBooksRec().containsKey(itemID)) {
+                        ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
+                        getLibBooksRec().remove(itemID);
+                        getSyncHeap().put(itemID, userID);
+                         if (getLibLendingRec().containsKey(itemID)) {
+                              ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
+                              getLibLendingRec().remove(itemID);
+                            if (!(lendHolder.contains(userID))) {
+                                getLibLendingRec().put(itemID, lendHolder);
+                                getLibBooksRec().put(itemID, bRecHolder);
+                                getSyncHeap().remove(itemID);
+                                return "You don't have a copy of this item. So you cannot return";
+                            }
+                            else
+                            {
+                                if(getWaitlistRec().containsKey(itemID)){
+                                    ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+
+                                }
+                            }
+
+                            }
+                            }
+
+                            }
         if ((userID.substring(3, 4).equals("U")) && itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
             if (getLibBooksRec().containsKey(itemID)) {
 
@@ -471,7 +537,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     }
 
     public HashMap<String, String> getSyncHeap() {
-        return syncHeap;
+        return this.syncHeap;
     }
 
     public void setSyncHeap(HashMap<String, String> syncHeap) {
