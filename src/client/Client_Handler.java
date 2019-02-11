@@ -4,6 +4,7 @@ import serverInterface.Interface_server;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.sql.SQLOutput;
 import java.util.Scanner;
 
 public class Client_Handler {
@@ -22,7 +23,6 @@ public class Client_Handler {
         boolean iterParm = false;
         do{
             iterParm = intialize();
-            System.out.println(getMessageBoard());
         }while(iterParm);
         appInteractor();
 
@@ -50,25 +50,31 @@ public class Client_Handler {
     public  boolean intialize() throws Exception
     {
         System.out.println("Welcome to the library Management System");
-        System.out.println("Please enter your ID: ");
-        Scanner sc = new Scanner(System.in);
-        String ID = sc.nextLine();
-        Client_Base client = new Client_Base(ID);
-        String serverSelect =  client.prefixCheck();
+        String ID = "";
+        String serverSelect;
+        do {
+            System.out.println("Please enter your ID: ");
+            Scanner sc = new Scanner(System.in);
+            ID = sc.nextLine();
+            clientStartup(ID);
+            serverSelect = this.client.prefixCheck();
+        }while(!(client.allCheck().equals("Okay")));
         if(serverSelect.equals("CONCORDIA"))
         {
             registry = LocateRegistry.getRegistry(2964);
             objCo = (Interface_server) registry.lookup("CONCORDIA");
             clientStartup(ID);
-            return true;
+            System.out.println("******WELCOME TO CONCORDIA UNIVERSITY LIBRARY******");
+            return false;
 
         }
         else if(serverSelect.equals("MCGILL"))
         {
             registry = LocateRegistry.getRegistry(2965);
-            objCo = (Interface_server) registry.lookup("MONTREALU");
+            objCo = (Interface_server) registry.lookup("MCGILL");
             clientStartup(ID);
-            return true;
+            System.out.println("******WELCOME TO MCGILL UNIVERSITY LIBRARY******");
+            return false;
         }
         else if(serverSelect.equals("MONTREALU"))
         {
@@ -76,27 +82,29 @@ public class Client_Handler {
             registry = LocateRegistry.getRegistry(2966);
             objCo = (Interface_server) registry.lookup("MONTREALU");
             clientStartup(ID);
-            return true;
+            System.out.println("******WELCOME TO UNIVERSITY OF MONTREAL LIBRARY******");
+            return false;
         }
         else
         {
             System.out.println("The ID is not related to any available server please try again;");
             setMessageBoard("The ID is not related to any available server please try again");
-            return false;
+            return true;
         }
     }
-    public void appInteractor() throws RemoteException
-    {
+    public void appInteractor() throws RemoteException, InterruptedException {
         boolean continu = true;
         while(continu)
         {
-            String interacString = objCo.verify(client.getTotalID());
+            String interacString = "";
+            interacString = objCo.verify(client.getTotalID());
             System.out.println(interacString);
             Scanner sc = new Scanner(System.in);
-            int input = sc.nextInt();
-            if(client.getID_Type().equals("Manager"))
+            String input = sc.nextLine();
+            if(client.typeCheck().equals("Manager"))
             {
-                if (input == 1)
+
+                if (input.equals("1"))
                 {
                     System.out.println("Please enter the item ID: ");
                     String itemID = sc.nextLine();
@@ -114,8 +122,9 @@ public class Client_Handler {
                             interacString = objCo.addItem(client.getTotalID(), itemID, itemName, quantity);
                             System.out.println("The record for this item is still being used by another user");
                             System.out.println("We will try to connect the  server again in a few seconds, please wait...");
-
+                            wait(10000000);
                         }while(interacString != "The record for this item is currently being used by another user");
+                        System.out.println("The previous user's actions are completed, your action will be performed next.\n");
                         System.out.println(interacString);
                     }
                     else
@@ -123,7 +132,7 @@ public class Client_Handler {
                         System.out.println(interacString);
                     }
                 }
-                else if(input == 2)
+                else if(input.equals("2"))
                 {
                     System.out.println("Please enter the item ID: ");
                     String itemID = sc.nextLine();
@@ -157,8 +166,9 @@ public class Client_Handler {
                             }
                             System.out.println("The record for this item is still being used by another user");
                             System.out.println("We will try to connect the  server again in a few seconds, please wait...");
-
+                            wait(10000000);
                         }while(interacString != "The record for this item is currently being used by another user");
+                        System.out.println("The previous user's actions are completed, your action will be performed next.\n");
                         System.out.println(interacString);
                     }
                     else
@@ -168,20 +178,20 @@ public class Client_Handler {
 
 
                 }
-                else if(input == 3)
+                else if(input.equals("3"))
                 {
                     interacString = objCo.listItemAvailability(client.getTotalID());
                     System.out.println(interacString);
                 }
-                else if(input == 0)
+                else if(input.equals("0"))
                 {
                     System.out.println("Thank-you for using our services. :)");
                     return;
                 }
             }
-            else if(client.getID_Type() == "User")
+            else if(client.typeCheck().equals("User"))
             {
-                if (input == 1)
+                if (input.equals("1"))
                 {
                     System.out.println("Please enter the item ID you want to borrow: ");
                     String itemID = sc.nextLine();
@@ -198,9 +208,11 @@ public class Client_Handler {
                             System.out.println(interacString);
                             System.out.println("The record for this item is still being used by another user\n");
                             System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
+                            wait(10000000);
 
                         }while(interacString != "The record for this item is currently being used by another user\n");
                         System.out.println("The previous user's actions a re completed, your action will be performed next.\n");
+                        System.out.println(interacString);
                     }
                     else {
                         System.out.println(interacString);
@@ -210,7 +222,10 @@ public class Client_Handler {
                             String resp = sc.nextLine();
                             if(resp == "Y")
                             {
-                                System.out.println("CAll the waitlist methood in the server");
+                                System.out.println("Calling the waitlist procedure in the server");
+                                interacString = objCo.addToWait(resp, itemID, client.getTotalID());
+                                System.out.println(interacString);
+;
                             }
 
                         }
@@ -218,14 +233,14 @@ public class Client_Handler {
                             System.out.println(interacString);
                     }
                 }
-                else if(input == 2)
+                else if((input.equals("2")))
                 {
                     System.out.println("Please enter the item name you want to search for in the library: ");
                     String itemName = sc.nextLine();
                     interacString = objCo.findItem(client.getTotalID(),itemName);
                     System.out.println(interacString);
                 }
-                else if(input == 3)
+                else if(input.equals("3"))
                 {
                     System.out.println("Please enter the item ID you want want to return");
                     String itemID = sc.nextLine();
@@ -242,7 +257,7 @@ public class Client_Handler {
                             System.out.println(interacString);
                             System.out.println("The record for this item is still being used by another user\n");
                             System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
-
+                            wait(10000000);
                         }while(interacString != "The record for this item is currently being used by another user\n");
                         System.out.println("The previous user's actions are completed, your action will be performed next.\n");
                         System.out.println(interacString);
@@ -254,7 +269,7 @@ public class Client_Handler {
 
                 }
 
-                else if(input == 0)
+                else if(input.equals("0"))
                 {
                     System.out.println("Thank-you for using our services. :)");
                     return;

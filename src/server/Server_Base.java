@@ -305,6 +305,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 getSyncHeap().remove(itemID, userID);
                                 finalString = finalString + ("The item is currently not available\n");
                                 finalString = finalString + ("Would you like to be added to the waitlist? Enter Y for Yes and N for No.\n");
+                                finalString = finalString + ("Enter Y for Yes and N for No");
                                 return finalString;
                             } else {
                                 getLibLendingRec().put(itemID, lendHolder);
@@ -347,8 +348,13 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 }
             }
                 else{
-                System.out.println("The item does not exist in the library " + getServername());
-                finalString = finalString + "The item does not exist in the library " + getServername() + "\n";
+                    if (getSyncHeap().containsKey(itemID)) {
+                        return "The record for this item is currently being used by another user\n";
+                    }
+                    else {
+                        System.out.println("The item does not exist in the library " + getServername());
+                        finalString = finalString + "The item does not exist in the library " + getServername() + "\n";
+                    }
             }
 
         } else {
@@ -429,7 +435,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         return "Officially, you don't have a copy of this item. So you cannot return. Please contact your manager";
                     }
                 } else {
-                    return "This book ID does not exist in the library " + getServername();
+                    if (getSyncHeap().containsKey(itemID)) {
+                            return "The record for this item is currently being used by another user\n";
+                    } else {
+                        return "This book ID does not exist in the library " + getServername();
+                    }
                 }
             } else {
                 System.out.println("Make a appropriate UDP call for the inter server item list update");
@@ -478,7 +488,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
         }
         if (ID.substring(3, 4).equals("U")) {
-            finalString = finalString + "Your options are: \n+ 1. Press 1 for borrowing an item.\n";
+            finalString = finalString + "Your options are: \n1. Press 1 for borrowing an item.\n";
             finalString = finalString + "2. Press 2 for finding an item.\n";
             finalString = finalString + "3. Press 3 for returning an item\n";
             finalString = finalString + "0. Press 0 for exit.\n";
@@ -570,6 +580,40 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             tempStore.add(msg);
             getUserUpdateMessages().put(userID, tempStore);
             System.out.println("Message has been added to the profile of " + userID + "\n");
+        }
+    }
+
+    public String addToWait(String parm, String itemID, String userID)
+    {
+        if(parm == "Y")
+        {
+            if(getWaitlistRec().containsKey(itemID))
+            {
+                ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                if(waitHolder.contains(userID))
+                {
+                    return ("You are already in the waitlist for this item");
+                }
+                else
+                {
+                    getWaitlistRec().remove(itemID);
+                    waitHolder.add(userID);
+                    getWaitlistRec().put(itemID,waitHolder);
+                    return ("You have been sucessfully waitlisted for the item "+ itemID);
+                }
+            }
+            else
+            {
+                ArrayList<String> waitHolder = new ArrayList<String> ();
+                ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
+                waitHolder.add(userID);
+                getWaitlistRec().put(bRecHolder.get(0),waitHolder);
+                return ("You have been sucessfully waitlisted for the item "+ itemID);
+
+            }
+        }
+        else{
+            return ("Invalid response");
         }
     }
 

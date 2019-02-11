@@ -36,20 +36,20 @@ public class Client_Base {
     }
 
     public String prefixCheck() {
-        if (this.ID_Prefix == "CON")
+        if (this.ID_Prefix.equals("CON"))
             return "CONCORDIA";
-        if (this.ID_Prefix == "MCG")
+        if (this.ID_Prefix.equals("MCG"))
             return "MCGILL";
-        if (this.ID_Prefix == "MON")
+        if (this.ID_Prefix.equals("MON"))
             return "MONTREALU";
         else
             return "Invalid ID";
     }
 
     public String typeCheck() {
-        if (this.ID_Type == "U")
+        if (this.ID_Type.equals("U"))
             return "User";
-        if (this.ID_Type == "M")
+        if (this.ID_Type.equals("M"))
             return "Manager";
         return "Invalid ID";
     }
@@ -61,6 +61,19 @@ public class Client_Base {
         }
         else
         {
+            return "Invalid ID";
+        }
+    }
+    public String allCheck()
+    {
+        if(!(this.prefixCheck().equals("Invalid ID")) &&(!(this.typeCheck().equals("Invalid ID")))&&(!(this.idNumbercheck().equals("Invalid ID"))))
+        {
+            System.out.println("The ID is valid");
+            return "Okay";
+        }
+        else
+        {
+            System.out.println("The ID is invalid");
             return "Invalid ID";
         }
     }
