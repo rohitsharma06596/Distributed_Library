@@ -208,7 +208,7 @@ public class Client_Handler {
                             System.out.println(interacString);
                             System.out.println("The record for this item is still being used by another user\n");
                             System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
-                            wait(10000000);
+                            wait(1000000000);
 
                         }while(interacString != "The record for this item is currently being used by another user\n");
                         System.out.println("The previous user's actions a re completed, your action will be performed next.\n");
@@ -217,15 +217,28 @@ public class Client_Handler {
                     else {
                         System.out.println(interacString);
                     }
-                    if(interacString.contains("Would you like to be added to the waitlist? Enter Y for Yes and N for No"))
+                    if(interacString.contains("waitlist?"))
                         {
+                            System.out.print("You are in the waitlist section: ");
+                            sc.nextLine();
                             String resp = sc.nextLine();
-                            if(resp == "Y")
+                            if(resp.equals("Y"))
                             {
                                 System.out.println("Calling the waitlist procedure in the server");
                                 interacString = objCo.addToWait(resp, itemID, client.getTotalID());
                                 System.out.println(interacString);
 ;
+                            }
+                            else
+                            {
+                                if(resp.equals("N"))
+                                {
+                                    System.out.println("Coming out of the waitlist section");
+                                }
+                                else
+                                {
+                                    System.out.println("It was a invalid option, coming out of the waitlist section");
+                                }
                             }
 
                         }
@@ -244,10 +257,9 @@ public class Client_Handler {
                 {
                     System.out.println("Please enter the item ID you want want to return");
                     String itemID = sc.nextLine();
-                    interacString = objCo.returnItem(client.getTotalID(),itemID);
-                    System.out.println(interacString);
                     System.out.println("The call is being made to the server...");
                     interacString = objCo.returnItem(client.getTotalID(),itemID);
+                    System.out.println(interacString);
                     if(interacString.equalsIgnoreCase("The record for this item is currently being used by another user\n"))
                     {
                         System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
@@ -257,7 +269,7 @@ public class Client_Handler {
                             System.out.println(interacString);
                             System.out.println("The record for this item is still being used by another user\n");
                             System.out.println("We will try to connect the  server again in a few seconds, please wait...\n");
-                            wait(10000000);
+                            wait(1000000000);
                         }while(interacString != "The record for this item is currently being used by another user\n");
                         System.out.println("The previous user's actions are completed, your action will be performed next.\n");
                         System.out.println(interacString);
@@ -275,11 +287,14 @@ public class Client_Handler {
                     return;
                 }
             }
-            System.out.println("Enter \"Yes\" for continue doing more operations and \"No\" to quit.\n");
+            System.out.print("Enter \"Yes\" to continue doing more operations and \"No\" to quit.: ");
             String check = sc.nextLine();
+            System.out.println(check);
             boolean exitParm = false;
             do {
+                System.out.println("I am in the loop.");
                 if (check.equalsIgnoreCase("Yes")) {
+                    System.out.println("I am in the loop.");
                     exitParm = true;
                     continu = true;
                 } else if (check.equalsIgnoreCase("No")) {
@@ -290,8 +305,10 @@ public class Client_Handler {
                 } else {
                     System.out.println("Your choice was invalid please enter a valid exit code.\n");
                     System.out.println("Enter Yes for continue doing more operations and No to quit.\n");
+                    check = sc.nextLine();
+                    System.out.println(check);
                 }
-            }while(exitParm);
+            }while(!exitParm);
         }
 
     }

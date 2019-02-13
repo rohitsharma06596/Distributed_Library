@@ -9,9 +9,6 @@ public class Server_Manager {
         registry.bind("CONCORDIA", concordiaLib);
         concordiaLib = concordiaLib.loadServerRec(concordiaLib);
         System.out.println("Concordia Library has Started");
-        //System.out.println(concordiaLib);
-        //concordiaLib.addItem("CONM1000", "CON9000","Da Vinci Code", 10);
-        //concordiaLib.listItemAvailability("CONM1000");
 
     }
 
