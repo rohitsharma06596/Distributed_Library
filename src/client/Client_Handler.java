@@ -70,7 +70,7 @@ public class Client_Handler {
         }
         else if(serverSelect.equals("MCGILL"))
         {
-            registry = LocateRegistry.getRegistry(2965);
+            registry = LocateRegistry.getRegistry(2964);
             objCo = (Interface_server) registry.lookup("MCGILL");
             clientStartup(ID);
             System.out.println("******WELCOME TO MCGILL UNIVERSITY LIBRARY******");
@@ -79,7 +79,7 @@ public class Client_Handler {
         else if(serverSelect.equals("MONTREALU"))
         {
 
-            registry = LocateRegistry.getRegistry(2966);
+            registry = LocateRegistry.getRegistry(2964);
             objCo = (Interface_server) registry.lookup("MONTREALU");
             clientStartup(ID);
             System.out.println("******WELCOME TO UNIVERSITY OF MONTREAL LIBRARY******");
@@ -136,10 +136,10 @@ public class Client_Handler {
                 {
                     System.out.println("Please enter the item ID: ");
                     String itemID = sc.nextLine();
-                    System.out.println("Please enter the quantity you want to reduce or enter 0 for complete removal: ");
+                    System.out.println("Please enter the quantity you want to reduce or enter 0 or any negative number for complete removal: ");
                     int quantity = sc.nextInt();
                     System.out.println("The call is being made to the server...");
-                    if(quantity == 0)
+                    if(quantity <= 0)
                     {
                         interacString = objCo.removeItem(client.getTotalID(),itemID,quantity,true);
                         System.out.println(interacString);
@@ -154,7 +154,7 @@ public class Client_Handler {
                         System.out.println("We will try to connect the  server again in a few seconds, please wait...");
 
                         do{
-                            if(quantity == 0)
+                            if(quantity <= 0)
                             {
                                 interacString = objCo.removeItem(client.getTotalID(),itemID,quantity,true);
                                 System.out.println(interacString);

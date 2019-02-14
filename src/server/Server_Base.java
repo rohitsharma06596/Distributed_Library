@@ -1,6 +1,10 @@
 package server;
 
 import serverInterface.Interface_server;
+
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
@@ -13,6 +17,8 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     private HashMap waitlistRec;
     private HashMap libBooksRec;
     private HashMap<String, String> syncHeap;
+    private DatagramSocket ds;
+    private DatagramPacket dp;
 
     public HashMap<String, ArrayList<String>> getUserUpdateMessages() {
         return this.userUpdateMessages;
@@ -33,6 +39,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             returnString = returnString + valueHolder.get(i) + "\n";
             i++;
         }
+        msgHolder.remove(userID);
         System.out.println(returnString);
         return returnString;
 
@@ -110,27 +117,27 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
         } else if (xLib.getServername().equals("MCGILL")) {
             HashMap<String, ArrayList<String>> tempStore = new HashMap<String, ArrayList<String>>();
-            tempStore.put("MCG1000", new ArrayList<String>(Arrays.asList("Fifty Shades", "MCGU4041", "MCGU4042", "MCGU4043", "MCGU4044", "CONU4045")));
-            tempStore.put("MCG1001", new ArrayList<String>(Arrays.asList("The Dark Knight", "MCGU5051", "MCGU5052", "MCGU5053", "MCGU5054")));
-            tempStore.put("MCG7000", new ArrayList<String>(Arrays.asList("Shuttle Island", "MCGU6061", "MCGU6062")));
-            tempStore.put("MCG9001", new ArrayList<String>(Arrays.asList("Narnia", "MCGU6061", "MCGU6065")));
-            tempStore.put("MCG9002", new ArrayList<String>(Arrays.asList("Sectumsempra", "MCGU6067", "MCGU6068")));
+            tempStore.put("MCG1000", new ArrayList<String>(Arrays.asList("Fifty Shades", "MCGU4141", "MCGU4142", "MCGU4143", "MCGU4144", "MCGU4145")));
+            tempStore.put("MCG1001", new ArrayList<String>(Arrays.asList("The Dark Knight", "MCGU5151", "MCGU5152", "MCGU5153", "MCGU5154")));
+            tempStore.put("MCG7000", new ArrayList<String>(Arrays.asList("Shuttle Island", "MCGU6161", "MCGU6162")));
+            tempStore.put("MCG9001", new ArrayList<String>(Arrays.asList("Narnia", "MCGU6161", "MCGU6165")));
+            tempStore.put("MCG9003", new ArrayList<String>(Arrays.asList("Obliviate", "MCGU6167", "MCGU6168")));
 
 
             HashMap<String, ArrayList<String>> tempHash1 = new HashMap<String, ArrayList<String>>();
-            tempHash1.put("CON5000", new ArrayList<String>(Arrays.asList("Twilight", "10")));
-            tempHash1.put("CON6000", new ArrayList<String>(Arrays.asList("Alchemist", "20")));
-            tempHash1.put("CON7000", new ArrayList<String>(Arrays.asList("Shuttle Island", "10")));
-            tempHash1.put("CON8000", new ArrayList<String>(Arrays.asList("Angels and Demons", "5")));
-            tempHash1.put("CON9000", new ArrayList<String>(Arrays.asList("Da Vinci Code", "2")));
-            tempHash1.put("CON9001", new ArrayList<String>(Arrays.asList("Narnia", "0")));
-            tempHash1.put("CON9002", new ArrayList<String>(Arrays.asList("Sectumsempra", "10")));
+            tempHash1.put("MCG1000", new ArrayList<String>(Arrays.asList("Fifty Shades", "1")));
+            tempHash1.put("MCG1001", new ArrayList<String>(Arrays.asList("The Dark Knight", "20")));
+            tempHash1.put("MCG7000", new ArrayList<String>(Arrays.asList("Shuttle Island", "10")));
+            tempHash1.put("MCG8000", new ArrayList<String>(Arrays.asList("Angels and Demons", "5")));
+            tempHash1.put("MCG9003", new ArrayList<String>(Arrays.asList("Obliviate", "0")));
+            tempHash1.put("MCG9001", new ArrayList<String>(Arrays.asList("Narnia", "0")));
+            tempHash1.put("MCG9002", new ArrayList<String>(Arrays.asList("The Light Runner", "10")));
 
 
             HashMap<String, ArrayList<String>> tempHash2 = new HashMap<String, ArrayList<String>>();
 
-            tempHash2.put("CON9001", new ArrayList<String>(Arrays.asList("CONU5000", "CONU6000")));
-            tempHash2.put("CON9002", new ArrayList<String>(Arrays.asList("CONU7000", "CONU8000")));
+            tempHash2.put("MCG9001", new ArrayList<String>(Arrays.asList("MCGU5100", "MCGU6100")));
+            tempHash2.put("MCG9003", new ArrayList<String>(Arrays.asList("MCGU7100", "MCGU8100")));
 
             xLib.setLibLendingRec(tempStore);
             xLib.setLibBooksRec(tempHash1);
@@ -138,27 +145,27 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
         } else if (xLib.getServername().equals("MONTREALU")) {
             HashMap<String, ArrayList<String>> tempStore = new HashMap<String, ArrayList<String>>();
-            tempStore.put("CON1000", new ArrayList<String>(Arrays.asList("Star Wars", "CONU4041", "CONU4042", "CONU4043", "CONU4044", "CONU4045")));
-            tempStore.put("CON1001", new ArrayList<String>(Arrays.asList("Tombstone", "CONU5051", "CONU5052", "CONU5053", "CONU5054")));
-            tempStore.put("CON7000", new ArrayList<String>(Arrays.asList("The Doomsday", "CONU6061", "CONU6062")));
-            tempStore.put("CON9001", new ArrayList<String>(Arrays.asList("Avada Kedavra", "CONU6061", "CONU6065")));
-            tempStore.put("CON9002", new ArrayList<String>(Arrays.asList("Sectumsempra", "CONU6067", "CONU6068")));
+            tempStore.put("MON1000", new ArrayList<String>(Arrays.asList("Pedigree", "MONU4241", "MONU4242", "MONU4243", "MONU4244", "MONU4245")));
+            tempStore.put("MON1001", new ArrayList<String>(Arrays.asList("Castaway", "MONU5251", "MONU5252", "MONU5253", "MONU5254")));
+            tempStore.put("MON7000", new ArrayList<String>(Arrays.asList("Forrest", "MONU6261", "MONU6262")));
+            tempStore.put("MON9001", new ArrayList<String>(Arrays.asList("Expecto Patronum", "CONU6261", "MONU6265")));
+            tempStore.put("MON9002", new ArrayList<String>(Arrays.asList("Sectumsempra", "MONU6267", "MONU6268")));
 
 
             HashMap<String, ArrayList<String>> tempHash1 = new HashMap<String, ArrayList<String>>();
-            tempHash1.put("CON5000", new ArrayList<String>(Arrays.asList("Twilight", "10")));
-            tempHash1.put("CON6000", new ArrayList<String>(Arrays.asList("Alchemist", "20")));
-            tempHash1.put("CON7000", new ArrayList<String>(Arrays.asList("The Doomsday", "10")));
-            tempHash1.put("CON8000", new ArrayList<String>(Arrays.asList("Angels and Demons", "5")));
-            tempHash1.put("CON9000", new ArrayList<String>(Arrays.asList("Da Vinci Code", "2")));
-            tempHash1.put("CON9001", new ArrayList<String>(Arrays.asList("Avada Kedavra", "0")));
-            tempHash1.put("CON9002", new ArrayList<String>(Arrays.asList("Sectumsempra", "0")));
+            tempHash1.put("MON1000", new ArrayList<String>(Arrays.asList("Pedigree", "10")));
+            tempHash1.put("MON1001", new ArrayList<String>(Arrays.asList("Castaway", "20")));
+            tempHash1.put("MON7000", new ArrayList<String>(Arrays.asList("Forrest", "10")));
+            tempHash1.put("MON9001", new ArrayList<String>(Arrays.asList("Expecto Patronum", "0")));
+            tempHash1.put("MON9002", new ArrayList<String>(Arrays.asList("Sectumsempra", "12")));
+            tempHash1.put("MON9100", new ArrayList<String>(Arrays.asList("Narnia", "0")));
+            tempHash1.put("MON9102", new ArrayList<String>(Arrays.asList("Sectumsempra", "10")));
 
 
             HashMap<String, ArrayList<String>> tempHash2 = new HashMap<String, ArrayList<String>>();
 
-            tempHash2.put("CON9001", new ArrayList<String>(Arrays.asList("CONU5000", "CONU6000")));
-            tempHash2.put("CON9002", new ArrayList<String>(Arrays.asList("CONU7000", "CONU8000")));
+            tempHash2.put("MON9001", new ArrayList<String>(Arrays.asList("MONU5200", "MONU6200")));
+            tempHash2.put("MON9100", new ArrayList<String>(Arrays.asList("MONU7200", "MONU8200")));
 
             xLib.setLibLendingRec(tempStore);
             xLib.setLibBooksRec(tempHash1);
@@ -180,143 +187,179 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 System.out.println(getLibBooksRec().get(itemID));
                 ArrayList<String> value = (ArrayList<String>) getLibBooksRec().get(itemID);
                 if (quantity > 0) {
-                    this.syncHeap.put(itemID, managerID);
-                    if (!(getWaitlistRec().containsKey(itemID))) {
-                        getLibBooksRec().remove(itemID);
-                        System.out.println(value.get(0) + " " + value.get(1));
-                        getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + quantity))));
-                        this.syncHeap.remove(itemID);
-                        return ("This item is already listed in the library and the quantity has been updated");
-                    } else {
-                        int least = 0;
-                        ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
-                        ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
-                        getLibLendingRec().remove(itemID);
-                        getWaitlistRec().remove(itemID);
-                        if (quantity < waitHolder.size())
-                            least = quantity;
-                        else
-                            least = waitHolder.size();
-                        int iter=0;
-                        do{
-                            System.out.println(waitHolder.get(0));
-                            this.updateMessageHash("Your waitlist for the item " + itemID + " is clear the item has been issued to you", waitHolder.get(0));
-                            System.out.println("Item is automatically used to clear the waitlist the item has been issued to " + waitHolder.get(0));
-                            finalString = finalString + ("Item is automatically used to clear the waitlist the item has been issued to " + waitHolder.get(0)+"\n");
-                            lendHolder.add(waitHolder.get(0));
-                            waitHolder.remove(waitHolder.get(0));
-                            iter = iter +1;
-                            System.out.println(iter);
-                            System.out.println(least);
-                            System.out.println(waitHolder);
-                        }while(iter < least);
-                        if(quantity != iter)
-                        {
+                        this.syncHeap.put(itemID, managerID);
+                        if (!(getWaitlistRec().containsKey(itemID))) {
                             getLibBooksRec().remove(itemID);
                             System.out.println(value.get(0) + " " + value.get(1));
-                            getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + (quantity-iter)))));
-                            finalString = finalString +("After clearing the waitlist was "+Integer.toString(quantity-least)+" copies of the items were added to the library. \n");
-                        }
-                        getWaitlistRec().put(itemID, waitHolder);
-                        getLibLendingRec().put(itemID, lendHolder);
-                    }
-                    this.syncHeap.remove(itemID);
-                } else {
-                    if(quantity < 0) {
-                        this.syncHeap.put(itemID, managerID);
-                        ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
-                        ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
-                        getLibLendingRec().remove(itemID);
-                        getWaitlistRec().remove(itemID);
-
-                        for (int iter = 0; iter < waitHolder.size(); iter++) {
-                            this.updateMessageHash("The manager of the item has removed the item: "+itemID+". Hence you have been removed from the waiting list", waitHolder.get(iter));
-                            System.out.println("The manager of the item has removed the item: "+itemID+". Hence you have been removed from the waiting list");
-                            finalString = finalString + ("The manager of the item has removed the item: "+itemID+". Hence you have been removed from the waiting list\n");
-                            waitHolder.remove(waitHolder.get(iter));
-                        }
-                        for (int iter2 = 1; iter2 < lendHolder.size(); iter2++) {
-                            this.updateMessageHash("The manager of the item has removed the item: "+itemID+". Hence you have been removed from the waiting list", lendHolder.get(iter2));
-                            System.out.println("The manager of the item has removed the item: "+itemID+". Hence you have been removed from the waiting list");
-                            finalString = finalString + ("The manager of the item has removed the item: "+itemID+". Hence you have been removed from the waiting list\n");
-                            lendHolder.remove(lendHolder.get(iter2));
+                            getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + quantity))));
+                            this.syncHeap.remove(itemID);
+                            return ("This item "+itemID+" is already listed in the "+getServername()+ " library and the quantity is increased by "+ Integer.toString(quantity));
+                        } else {
+                            int least = 0;
+                            ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                            ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
+                            getLibLendingRec().remove(itemID);
+                            getWaitlistRec().remove(itemID);
+                            if (quantity < waitHolder.size())
+                                least = quantity;
+                            else
+                                least = waitHolder.size();
+                            int iter = 0;
+                            do {
+                                System.out.println(waitHolder.get(0));
+                                this.updateMessageHash("Your waitlist for the item " + itemID + " is clear the item is being issued to ", waitHolder.get(0));
+                                System.out.println("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0));
+                                finalString = finalString + ("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0) + "\n");
+                                lendHolder.add(waitHolder.get(0));
+                                waitHolder.remove(waitHolder.get(0));
+                                iter = iter + 1;
+                                System.out.println(iter);
+                                System.out.println(least);
+                                System.out.println(waitHolder);
+                            } while (iter < least);
+                            if (quantity != iter) {
+                                getLibBooksRec().remove(itemID);
+                                System.out.println(value.get(0) + " " + value.get(1));
+                                getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + (quantity - iter)))));
+                                finalString = finalString + ("After clearing the waitlist  for the item the remaining " + Integer.toString(quantity - least) + " copies of the item were added to the library. \n");
+                            }
+                            getWaitlistRec().put(itemID, waitHolder);
+                            getLibLendingRec().put(itemID, lendHolder);
                         }
                         this.syncHeap.remove(itemID);
-
                     }
-                    else {
-                        return ("The  value entered is not valid");
+            else {
+                if (quantity < 0) {
+                    this.syncHeap.put(itemID, managerID);
+                    ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
+                    ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                    getLibLendingRec().remove(itemID);
+                    getWaitlistRec().remove(itemID);
+
+                    for (int iter = 0; iter < waitHolder.size(); iter++) {
+                        this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", waitHolder.get(iter));
+                        System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
+                        finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list\n");
+                        waitHolder.remove(waitHolder.get(iter));
                     }
+                    for (int iter2 = 1; iter2 < lendHolder.size(); iter2++) {
+                        this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrower's list", lendHolder.get(iter2));
+                        System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrowers' list");
+                        finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrower's list\n");
+                        lendHolder.remove(lendHolder.get(iter2));
+                    }
+                    this.syncHeap.remove(itemID);
 
-
+                } else {
+                    return ("The  value entered is invalid");
                 }
 
-            } else if (syncHeap.containsKey(itemID)) {
-                return ("The record for this item is currently being used by another user please try after sometime");
-            } else {
-                getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemID, Integer.toString(quantity))));
-                return ("This item was not listed in the library a new entry has been made for this with the provided quantity");
+
             }
+
+        } else if (syncHeap.containsKey(itemID)) {
+                System.out.println("The record for this item is currently being used by another user please try after sometime\n");
+            return ("The record for this item is currently being used by another user please try after sometime\n");
         } else {
-            System.out.println("The User is not authorized for this action");
-            return ("The User is not authorized for this action");
+            getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemID, Integer.toString(quantity))));
+                System.out.println("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
+            return ("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
         }
+    } else{
+        System.out.println("The user is not authorized for this action");
+        return ("The user is not authorized for this action");
+    }
 
         return finalString;
-    }
+}
 
 
     public String removeItem(String managerID, String itemID, int quantity, boolean completeRemove) {
+        String finalString = "";
         if (managerID.substring(3, 4).equals("M")) {
 
             if (!getLibBooksRec().containsKey(itemID)) {
-                if(syncHeap.containsKey(itemID)){
-                    return("The record for this item is currently being used by another user please try after sometime");
-                }
-                else {
-                    System.out.println("The item does not exist in the library");
-                    return ("The item has not been listed in the library");
+                if (syncHeap.containsKey(itemID)) {
+                    System.out.println("The record for this item is currently being used by another user please try after sometime\n");
+                    return ("The record for this item is currently being used by another user please try after sometime\n");
+                } else {
+                    System.out.println("The item does not exist in the library.\n");
+                    return ("The item has not been listed in the library.\n");
                 }
             } else if (completeRemove == true) {
                 String msg = "";
-                syncHeap.put(itemID,managerID);
+                syncHeap.put(itemID, managerID);
                 getLibBooksRec().remove(itemID);
-                System.out.println("Removed from the library borrow records");
                 ArrayList<String> tempUsers = getLendingDetail(itemID);
                 getLibLendingRec().remove(itemID);
-                for (int i = 0; i < tempUsers.size(); i++){
-                    msg = "The item "+ itemID +" has been completely removed from the library. All the copies are being recalled + please return back the item.\n";
+                for (int i = 1; i < tempUsers.size(); i++) {
+                    msg = "The item " + itemID + " has been completely removed from the library. All the copies are being recalled, please return back the item.\n";
                     updateMessageHash(msg, tempUsers.get(i));
                     msg = "";
-
+                }
+                ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                for (int iter = 0; iter < waitHolder.size(); iter++) {
+                    this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", waitHolder.get(iter));
+                    System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
+                    finalString = finalString + ("Notified the user" + waitHolder.get(iter)+"\n");
+                    waitHolder.remove(waitHolder.get(iter));
                 }
                 syncHeap.remove(itemID);
                 System.out.println("Notified all the borrowers to return back");
-                System.out.println("The item has been completely removed from the library.");
+                System.out.println("The item has been completely removed from the library.\n");
                 return ("The item has been removed from the library availability list.\nAll the borrowers are notified to return back.\n");
             } else {
-                System.out.println(getLibBooksRec().get(itemID));
-                ArrayList<String> value = (ArrayList<String>) getLibBooksRec().get(itemID);
-                syncHeap.put(itemID,managerID);
-                getLibBooksRec().remove(itemID);
-                System.out.println(value.get(0) + " " + value.get(1));
-                if (Integer.parseInt(value.get(1)) > quantity) {
-                    getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) - quantity))));
+                if (quantity < 0) {
+                    this.syncHeap.put(itemID, managerID);
+                    ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
+                    ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                    getLibLendingRec().remove(itemID);
+                    getWaitlistRec().remove(itemID);
 
-                    System.out.println("The appropriate amount of item have been removed from the unborrowed section");
-                    return "The appropriate amount of item have been removed from the unborrowed section";
+                    for (int iter = 0; iter < waitHolder.size(); iter++) {
+                        this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", waitHolder.get(iter));
+                        System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
+                        finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list\n");
+                        waitHolder.remove(waitHolder.get(iter));
+                    }
+                    for (int iter2 = 1; iter2 < lendHolder.size(); iter2++) {
+                        this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", lendHolder.get(iter2));
+                        System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
+                        finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list\n");
+                        lendHolder.remove(lendHolder.get(iter2));
+                    }
+                    this.syncHeap.remove(itemID);
+
                 } else {
-                    getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), "0")));
-                    syncHeap.remove(itemID,managerID);
-                    System.out.println("The item has been removed from the unborrowed section, nothing is left");
-                    return "The item has been removed from the unborrowed section, nothing is left";
+                    ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
+                    if(quantity <= Integer.parseInt(bRecHolder.get(1))) {
+                        System.out.println(getLibBooksRec().get(itemID));
+                        ArrayList<String> value = (ArrayList<String>) getLibBooksRec().get(itemID);
+                        syncHeap.put(itemID, managerID);
+                        getLibBooksRec().remove(itemID);
+                        System.out.println(value.get(0) + " " + value.get(1));
+                        if (Integer.parseInt(value.get(1)) > quantity) {
+                            getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) - quantity))));
+
+                            System.out.println("The appropriate amount of item have been removed from the unborrowed section");
+                            return "The appropriate amount of item have been removed from the unborrowed section";
+                        } else {
+                            getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), "0")));
+                            syncHeap.remove(itemID, managerID);
+                            System.out.println("The item has been removed from the unborrowed section, nothing is left");
+                            return "The item has been removed from the unborrowed section, nothing is left";
+                        }
+                    }
+                    else{
+                        return ("The entered value is more than the availablity, cannot remove.");
+                    }
                 }
             }
-        } else {
+        }else {
             System.out.println("The User is not authorized for this action");
             return ("The User is not authorized for this action");
         }
-
+        return finalString;
     }
 
     public String listItemAvailability(String managerID) {
@@ -533,6 +576,8 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     public String verify(String ID) {
         String finalString = "";
+        System.out.println("*************************************************************************");
+        System.out.println("Verifying the connection at "+getServername()+" Library.");
         if (getServername().substring(0, 3).equals(ID.substring(0, 3))) {
             System.out.println("The ID is connected to right server");
             finalString = finalString + "The ID is connected to right server.\n";
@@ -551,10 +596,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         try {
             if (userUpdateMessages.containsKey(ID)) {
                 System.out.println("I am inside here");
-                finalString = finalString + " You have one message from the server.\n" + this.getUserMessageStr((ID)) + "\n";
+                finalString = finalString + " You have new messages from the server.\n" + this.getUserMessageStr((ID)) + "\n";
                 System.out.println("I am after the call to the message method");
             } else {
                 finalString = finalString + "The ID has vaild user type.\n";
+                finalString = finalString + "No new Messages for you. \n";
             }
         } catch (NullPointerException e) {
             finalString = finalString + "No new Messages for you. \n";
@@ -696,6 +742,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         else{
             return ("Invalid response");
         }
+    }
+
+    public void interServerInteractor() throws SocketException {
+        this.ds = new DatagramSocket();
+
+
     }
 
 
