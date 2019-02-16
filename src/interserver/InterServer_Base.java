@@ -1,6 +1,7 @@
 package interserver;
 
-import javax.xml.crypto.Data;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.*;
 
@@ -28,6 +29,8 @@ public class InterServer_Base extends Thread {
             DatagramSocket tempSock = new DatagramSocket();
 
             try {
+                socket.close();
+                socket = new DatagramSocket(9999);
                 System.out.println("I am waiting to receive a packet");
                 socket.receive(packet);
 
@@ -138,5 +141,20 @@ public class InterServer_Base extends Thread {
             System.out.println("I am going for another iteration");
         }
         socket.close();
+    }
+    public static void appendStrToFile(String str)
+    {
+        try {
+            FileWriter fw = new FileWriter("./InterServerLog.txt", true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(str);
+            System.out.println("Write was successful");
+            bw.newLine();
+            bw.close();
+
+        }
+        catch (IOException e) {
+            System.out.println("exception occoured" + e);
+        }
     }
 }

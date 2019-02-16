@@ -2,6 +2,9 @@ package server;
 
 import serverInterface.Interface_server;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.*;
 import java.rmi.RemoteException;
@@ -292,10 +295,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             } else {
                 getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemID, Integer.toString(quantity))));
                 System.out.println("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
+                appendStrToFile("his item was not listed in the library a new entry has been made for this with the provided q\n");
                 return ("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
             }
         } else {
             System.out.println("The user is not authorized for this action");
+
             return ("The user is not authorized for this action");
         }
 
@@ -944,189 +949,99 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     }
 
     public void interServerInteractor() throws IOException {
-        if (this.getServername().equals("CONCORDIA")) {
-            byte[] b1 = null;
-            b1 = new byte[1024];
-            this.dpr = new DatagramPacket(b1, b1.length);
-            System.out.println("I am open for listen");
-            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8081);
-            ds1.bind(address);
-            this.ds1.receive(dpr);
-            System.out.println("I am in " + getServername());
-            String result = null;
-            result = new String(dpr.getData());
-            System.out.println(result);
-            System.out.println(result.charAt(0));
-            if (result.startsWith("F")) {
-                System.out.println("Find the appropriate method to be called and call that using a dummy variable");
-
-                System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
-                result = result.trim();
-                String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
-                String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
-                int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
-                String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
-
-                String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
-                byte[] b = (rece + "").getBytes();
-                InetAddress ia = null;
-                try {
-                    ia = InetAddress.getLocalHost();
-                    this.dps = new DatagramPacket(b, b.length, ia, 9999);
-                    //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
-                    System.out.println("I am sending the packet");
-                    this.ds.send(this.dps);
-                } catch (UnknownHostException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                if (result.startsWith("B")) {
-                    result = result.trim();
-                    String temp1 = result.substring(2, result.indexOf('@'));
-                    this.globalString = temp1;
-                    System.out.println("At the end " + this.globalString);
-
-                } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
-                    System.out.println("Find the appropriate method to be called and call that using a dummy variable");
-                    System.out.println(result);
-                    System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
-                    result = result.trim();
-                    String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
-                    String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
-                    String finalString = "Items matching your entry at " + getServername() + " are:\n";
-                    if (vuserID.substring(3, 4).equals("U")) {
-                        Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
-                        for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
-                            ArrayList<String> valueHolder = entry.getValue();
-                            if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
-                                finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
-                            }
-                        }
-
-                        String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
-                        byte[] b = (rece + "").getBytes();
-                        InetAddress ia = null;
-                        try {
-                            ia = InetAddress.getLocalHost();
-                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
-                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
-                            System.out.println("I am sending the packet");
-                            this.ds.send(this.dps);
-                        } catch (UnknownHostException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-
-                    }
-                } else if (result.startsWith("P") || result.startsWith("Q") || result.startsWith("R")) {
-                    result = result.trim();
-                    String temp1 = result.substring(2, result.indexOf('@'));
-                    this.globalString = temp1;
-                    System.out.println("At the end " + this.globalString);
-                }
-            }
-        }
-        if (this.getServername().equals("MCGILL")) {
-            byte[] b1 = null;
-            b1 = new byte[1024];
-            this.dpr = new DatagramPacket(b1, b1.length);
-            System.out.println("I am open for listen");
-            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8082);
-            ds1.bind(address);
-            this.ds1.receive(dpr);
-            System.out.println("I am in " + getServername());
-            String result = null;
-            result = new String(dpr.getData());
-            result = result.trim();
-            System.out.println(result);
-            System.out.println(result.charAt(0));
-            if (result.startsWith("F")) {
-                System.out.println("Find the appropriate method to be called and call that using a dummy variable");
-                System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
-                result = result.trim();
-                String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
-                String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
-                int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
-                String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
-
-                String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
-                System.out.println("The found matches on this server "+rece);
-                byte[] b = (rece + "").getBytes();
-                InetAddress ia = null;
-                try {
-                    ia = InetAddress.getLocalHost();
-                    this.dps = new DatagramPacket(b, b.length, ia, 9999);
-                    //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
-                    System.out.println("I am sending the packet");
-                    this.ds.send(this.dps);
-                } catch (UnknownHostException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                if (result.startsWith("B")) {
-                    result = result.trim();
-                    String temp1 = result.substring(2, result.indexOf('@'));
-                    this.globalString = temp1;
-                    System.out.println("At the end " + this.globalString);
-
-                } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
-                    System.out.println("Find the appropriate method to be called and call that using a dummy variable");
-                    System.out.println(result);
-                    System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
-                    result = result.trim();
-                    String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
-                    String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
-                    String finalString = "Items matching your entry at " + getServername() + " are:\n";
-                    if (vuserID.substring(3, 4).equals("U")) {
-                        Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
-                        for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
-                            ArrayList<String> valueHolder = entry.getValue();
-                            if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
-                                finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
-                            }
-                        }
-                        System.out.println(finalString);
-                        String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
-                        System.out.println(rece);
-                        byte[] b = (rece + "").getBytes();
-                        InetAddress ia = null;
-                        try {
-                            ia = InetAddress.getLocalHost();
-                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
-                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
-                            System.out.println("I am sending the packet");
-                            this.ds.send(this.dps);
-                        } catch (UnknownHostException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-
-                    }
-                } else if (result.startsWith("P") || result.startsWith("Q") || result.startsWith("R")) {
-                    result = result.trim();
-                    String temp1 = result.substring(2, result.indexOf('@'));
-                    this.globalString = temp1;
-                    System.out.println("At the end " + this.globalString);
-                }
-
-            }
-        }
-        if(this.getServername().equals("MONTREALU"))
-        {
-            {
+        while(true) {
+            if (this.getServername().equals("CONCORDIA")) {
                 byte[] b1 = null;
                 b1 = new byte[1024];
                 this.dpr = new DatagramPacket(b1, b1.length);
                 System.out.println("I am open for listen");
-                InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8083);
+                InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8081);
+                ds1.bind(address);
+                this.ds1.receive(dpr);
+                System.out.println("I am in " + getServername());
+                String result = null;
+                result = new String(dpr.getData());
+                System.out.println(result);
+                System.out.println(result.charAt(0));
+                if (result.startsWith("F")) {
+                    System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+
+                    System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                    result = result.trim();
+                    String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                    String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                    int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                    String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+
+                    String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
+                    byte[] b = (rece + "").getBytes();
+                    InetAddress ia = null;
+                    try {
+                        ia = InetAddress.getLocalHost();
+                        this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                        //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                        System.out.println("I am sending the packet");
+                        this.ds.send(this.dps);
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    if (result.startsWith("B")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+
+                    } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
+                        System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                        System.out.println(result);
+                        System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
+                        String finalString = "Items matching your entry at " + getServername() + " are:\n";
+                        if (vuserID.substring(3, 4).equals("U")) {
+                            Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
+                            for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
+                                ArrayList<String> valueHolder = entry.getValue();
+                                if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
+                                    finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
+                                }
+                            }
+
+                            String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
+                            byte[] b = (rece + "").getBytes();
+                            InetAddress ia = null;
+                            try {
+                                ia = InetAddress.getLocalHost();
+                                this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                                //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                                System.out.println("I am sending the packet");
+                                this.ds.send(this.dps);
+                            } catch (UnknownHostException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+
+                        }
+                    } else if (result.startsWith("P") || result.startsWith("Q") || result.startsWith("R")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+                    }
+                }
+            }
+            if (this.getServername().equals("MCGILL")) {
+                byte[] b1 = null;
+                b1 = new byte[1024];
+                this.dpr = new DatagramPacket(b1, b1.length);
+                System.out.println("I am open for listen");
+                InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8082);
                 ds1.bind(address);
                 this.ds1.receive(dpr);
                 System.out.println("I am in " + getServername());
@@ -1145,7 +1060,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
 
                     String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
-                    System.out.println("The found matches on this server "+rece);
+                    System.out.println("The found matches on this server " + rece);
                     byte[] b = (rece + "").getBytes();
                     InetAddress ia = null;
                     try {
@@ -1210,20 +1125,128 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                 }
             }
+            if (this.getServername().equals("MONTREALU")) {
+                {
+                    byte[] b1 = null;
+                    b1 = new byte[1024];
+                    this.dpr = new DatagramPacket(b1, b1.length);
+                    System.out.println("I am open for listen");
+                    InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8083);
+                    ds1.bind(address);
+                    this.ds1.receive(dpr);
+                    System.out.println("I am in " + getServername());
+                    String result = null;
+                    result = new String(dpr.getData());
+                    result = result.trim();
+                    System.out.println(result);
+                    System.out.println(result.charAt(0));
+                    if (result.startsWith("F")) {
+                        System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                        System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                        int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                        String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+
+                        String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
+                        System.out.println("The found matches on this server " + rece);
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        if (result.startsWith("B")) {
+                            result = result.trim();
+                            String temp1 = result.substring(2, result.indexOf('@'));
+                            this.globalString = temp1;
+                            System.out.println("At the end " + this.globalString);
+
+                        } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
+                            System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                            System.out.println(result);
+                            System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                            result = result.trim();
+                            String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                            String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
+                            String finalString = "Items matching your entry at " + getServername() + " are:\n";
+                            if (vuserID.substring(3, 4).equals("U")) {
+                                Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
+                                for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
+                                    ArrayList<String> valueHolder = entry.getValue();
+                                    if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
+                                        finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
+                                    }
+                                }
+                                System.out.println(finalString);
+                                String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
+                                System.out.println(rece);
+                                byte[] b = (rece + "").getBytes();
+                                InetAddress ia = null;
+                                try {
+                                    ia = InetAddress.getLocalHost();
+                                    this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                                    //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                                    System.out.println("I am sending the packet");
+                                    this.ds.send(this.dps);
+                                } catch (UnknownHostException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+
+                            }
+                        } else if (result.startsWith("P") || result.startsWith("Q") || result.startsWith("R")) {
+                            result = result.trim();
+                            String temp1 = result.substring(2, result.indexOf('@'));
+                            this.globalString = temp1;
+                            System.out.println("At the end " + this.globalString);
+                        }
+
+                    }
+                }
+            }
+            this.ds1.close();
+            this.ds1 = new DatagramSocket(null);
         }
 
     }
     @Override
     public void run() {
         try {
-            while(true) {
+
                 this.interServerInteractor();
-                t.stop();
-                t.start();
-                this.globalString = "";
-            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+    public static void appendStrToFile(String str)
+    {
+        try {
+            FileWriter fw = new FileWriter("./Server_BaseLog.txt", true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(str);
+            System.out.println("Write was successful");
+            bw.newLine();
+            bw.close();
+
+        }
+        catch (IOException e) {
+            System.out.println("exception occoured" + e);
+        }
+    }
+
 }

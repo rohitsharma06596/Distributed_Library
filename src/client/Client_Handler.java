@@ -2,6 +2,9 @@ package client;
 
 import serverInterface.Interface_server;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -313,5 +316,20 @@ public class Client_Handler {
             }while(!exitParm);
         }
 
+    }
+    public static void appendStrToFile(String str)
+    {
+        try {
+            FileWriter fw = new FileWriter("./Client_HandlerLog.txt", true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(str);
+            System.out.println("Write was successful");
+            bw.newLine();
+            bw.close();
+
+        }
+        catch (IOException e) {
+            System.out.println("exception occoured" + e);
+        }
     }
 }
