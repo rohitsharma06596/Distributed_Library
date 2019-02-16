@@ -16,6 +16,10 @@ public class InterServer_Base extends Thread {
         socket = new DatagramSocket(9999);
     }
 
+    /**Method main to create a UDP interface between two servers(libraries)
+     * @param args
+     * @throws SocketException
+     */
     public static void main(String[] args) throws SocketException {
         InterServer_Base temp = new InterServer_Base();
         temp.running = true;
@@ -32,6 +36,7 @@ public class InterServer_Base extends Thread {
                 socket.close();
                 socket = new DatagramSocket(9999);
                 System.out.println("I am waiting to receive a packet");
+                appendStrToFile("I am waiting to receive a packet");
                 socket.receive(packet);
 
 
@@ -40,6 +45,7 @@ public class InterServer_Base extends Thread {
             }
 
             System.out.println("I received the packet from: "+packet.getPort());
+            appendStrToFile("I received the packet from: "+packet.getPort());
             InetAddress address = null;
             try {
                 address = InetAddress.getLocalHost();
@@ -63,9 +69,12 @@ public class InterServer_Base extends Thread {
                 try {
                     ia = InetAddress.getLocalHost();
                     //  temp.dps = new DatagramPacket(b, b.length, ia, 9999);
+
                     System.out.println(received);
+                    appendStrToFile(received);
                     packet = new DatagramPacket(b, b.length, address, Integer.parseInt(received.substring(received.indexOf('|') + 1, received.indexOf('|') + 5)));
                     System.out.println("I am sending the packet");
+                    appendStrToFile("I am sending the packet");
                     tempSock.send(packet);
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
@@ -85,6 +94,7 @@ public class InterServer_Base extends Thread {
                     //  temp.dps = new DatagramPacket(b, b.length, ia, 9999);
                     packet = new DatagramPacket(b, b.length, address, Integer.parseInt(received.substring(received.indexOf('@')+1, received.indexOf('@')+5)));
                     System.out.println("I am sending the packet");
+                    appendStrToFile("I am sending the packet");
                     tempSock.send(packet);
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
@@ -95,6 +105,7 @@ public class InterServer_Base extends Thread {
 
             else if(received.startsWith("X")||received.startsWith("Y")||received.startsWith("Z")){
                 System.out.println("I am inside the right condition");
+                appendStrToFile("I am inside the right condition");
                 String temp1 = received.substring(2, received.indexOf('@'));
                 //int rece1 = Integer.parseInt(temp1);
                 //rece1 = rece1 * rece1;
@@ -108,8 +119,10 @@ public class InterServer_Base extends Thread {
                     received = received.substring(0,received.indexOf("|")+5);
                     System.out.println(received);
                     System.out.println("Sending this packet to" + Integer.parseInt(received.substring(received.indexOf('|') + 1, received.indexOf('|') + 5)));
+                    appendStrToFile("Sending this packet to" + Integer.parseInt(received.substring(received.indexOf('|') + 1, received.indexOf('|') + 5)));
                     DatagramPacket packet2 = new DatagramPacket(b, b.length, address, Integer.parseInt(received.substring(received.indexOf('|') + 1, received.indexOf('|') + 5)));
                     System.out.println("I am sending the packet");
+                    appendStrToFile("I am sending the packet");
                     socket.send(packet2);
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
@@ -123,6 +136,7 @@ public class InterServer_Base extends Thread {
                 //rece1 = rece1 * rece1;
                 String rece = received.substring(0, 2) + temp1 + received.substring(received.indexOf("@"));
                 System.out.println(rece);
+                appendStrToFile(rece);
                 byte[] b = (rece + "").getBytes();
                 InetAddress ia = null;
                 try {
@@ -130,6 +144,7 @@ public class InterServer_Base extends Thread {
                     //  temp.dps = new DatagramPacket(b, b.length, ia, 9999);
                     DatagramPacket packet3 = new DatagramPacket(b, b.length, address, Integer.parseInt(received.substring(received.indexOf('@')+1, received.indexOf('@')+5)));
                     System.out.println("I am sending the packet");
+                    appendStrToFile("I am sending the packet");
                     socket.send(packet3);
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
@@ -139,9 +154,14 @@ public class InterServer_Base extends Thread {
 
             }
             System.out.println("I am going for another iteration");
+            appendStrToFile("I am going for another iteration");
         }
         socket.close();
     }
+
+    /**Method to create log for the interserver class
+     * @param str
+     */
     public static void appendStrToFile(String str)
     {
         try {

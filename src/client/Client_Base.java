@@ -11,6 +11,9 @@ public class Client_Base {
         this.ID_Number = parm_ID.substring(4);
     }
 
+    /**getter for ID prefix
+     * @return
+     */
     public String getID_Prefix() {
         return ID_Prefix;
     }
@@ -19,6 +22,9 @@ public class Client_Base {
         this.ID_Prefix = ID_Prefix;
     }
 
+    /**getter for if type
+     * @return
+     */
     public String getID_Type() {
         return ID_Type;
     }
@@ -27,6 +33,10 @@ public class Client_Base {
         this.ID_Type = ID_Type;
     }
 
+    /**getter for ID number
+     *
+     * @return
+     */
     public String getID_Number() {
         return ID_Number;
     }
@@ -35,6 +45,9 @@ public class Client_Base {
         this.ID_Number = ID_Number;
     }
 
+    /**method for ID prefix check
+     * @return
+     */
     public String prefixCheck() {
         if (this.ID_Prefix.equals("CON"))
             return "CONCORDIA";
@@ -46,6 +59,9 @@ public class Client_Base {
             return "Invalid ID";
     }
 
+    /**Method for user type check
+     * @return
+     */
     public String typeCheck() {
         if (this.ID_Type.equals("U"))
             return "User";
@@ -54,6 +70,9 @@ public class Client_Base {
         return "Invalid ID";
     }
 
+    /**check for valid ID number
+     * @return
+     */
     public String idNumbercheck(){
         if(Integer.parseInt(this.getID_Number()) < 9999)
         {
@@ -64,6 +83,10 @@ public class Client_Base {
             return "Invalid ID";
         }
     }
+
+    /**Overall ID check method
+     * @return
+     */
     public String allCheck()
     {
         if(!(this.prefixCheck().equals("Invalid ID")) &&(!(this.typeCheck().equals("Invalid ID")))&&(!(this.idNumbercheck().equals("Invalid ID"))))
@@ -78,6 +101,9 @@ public class Client_Base {
         }
     }
 
+    /**Getter for total ID
+     * @return
+     */
     public String getTotalID() {
         return getID_Prefix()+getID_Type()+getID_Number();
     }

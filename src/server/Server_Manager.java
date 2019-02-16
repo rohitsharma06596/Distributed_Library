@@ -3,6 +3,12 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class Server_Manager {
+    /**
+     * This is the main trigger method which creates multiple instances of the Base Server class,
+     * and checks the validation.
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         Server_Base concordiaLib = new Server_Base("CONCORDIA");
         Registry cregistry = LocateRegistry.createRegistry(2964);

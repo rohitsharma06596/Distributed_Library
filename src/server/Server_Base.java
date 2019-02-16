@@ -11,6 +11,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
+
 public class Server_Base extends UnicastRemoteObject implements Interface_server, Runnable {
 
     private String servername;
@@ -37,12 +38,15 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         this.userUpdateMessages = userUpdateMessages;
     }
 
+    /** This method creates string of the inbox of different users who have unread messages.
+     * @param userID
+     * @return
+     */
     public String getUserMessageStr(String userID) {
         HashMap<String, ArrayList<String>> msgHolder = getUserUpdateMessages();
         ArrayList<String> valueHolder = msgHolder.get(userID);
         int i = 0;
         String returnString = "";
-        System.out.println("I am in here");
         while (i < valueHolder.size()) {
             System.out.println("I am stuck in the loop");
             returnString = returnString + valueHolder.get(i) + "\n";
@@ -54,6 +58,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     }
 
+    /**
+     * A constructor to insitate the Class instance
+     * @param name
+     * @throws IOException
+     */
     public Server_Base(String name) throws IOException {
         this.servername = name;
         this.syncHeap = new HashMap<String, String>();
@@ -66,6 +75,9 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     }
 
 
+    /** Setter and getter methoods
+     * @return
+     */
     public HashMap getLibBooksRec() {
         return this.libBooksRec;
     }
@@ -99,6 +111,10 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         this.servername = servername;
     }
 
+    /**Loads the prerequisite data to the class instances of the library servers
+     * @param xLib
+     * @return
+     */
     public Server_Base loadServerRec(Server_Base xLib) {
         if (xLib.getServername().equals("CONCORDIA")) {
             try {
@@ -122,7 +138,8 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             tempHash1.put("CON8000", new ArrayList<String>(Arrays.asList("Angels and Demons", "5")));
             tempHash1.put("CON9000", new ArrayList<String>(Arrays.asList("Da Vinci Code", "2")));
             tempHash1.put("CON9001", new ArrayList<String>(Arrays.asList("Avada Kedavra", "0")));
-            tempHash1.put("CON9002", new ArrayList<String>(Arrays.asList("Sectumsempra", "0")));
+            tempHash1.put("CON9002", new ArrayList<String>(Arrays.asList("Seldfnv", "0")));
+            tempHash1.put("CON9009", new ArrayList<String>(Arrays.asList("Sectumsempra", "10")));
 
 
             HashMap<String, ArrayList<String>> tempHash2 = new HashMap<String, ArrayList<String>>();
@@ -144,7 +161,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             HashMap<String, ArrayList<String>> tempStore = new HashMap<String, ArrayList<String>>();
             tempStore.put("MCG1000", new ArrayList<String>(Arrays.asList("Fifty Shades", "MCGU4141", "MCGU4142", "MCGU4143", "MCGU4144", "MCGU4145")));
             tempStore.put("MCG1001", new ArrayList<String>(Arrays.asList("The Dark Knight", "MCGU5151", "MCGU5152", "MCGU5153", "MCGU5154")));
-            tempStore.put("MCG7000", new ArrayList<String>(Arrays.asList("Shuttle Island", "MCGU6161", "MCGU6162")));
+            tempStore.put("MCG7000", new ArrayList<String>(Arrays.asList("Sectumsempra", "MCGU6161", "MCGU6162")));
             tempStore.put("MCG9001", new ArrayList<String>(Arrays.asList("Narnia", "MCGU6161", "MCGU6165")));
             tempStore.put("MCG9003", new ArrayList<String>(Arrays.asList("Obliviate", "MCGU6167", "MCGU6168")));
 
@@ -152,7 +169,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             HashMap<String, ArrayList<String>> tempHash1 = new HashMap<String, ArrayList<String>>();
             tempHash1.put("MCG1000", new ArrayList<String>(Arrays.asList("Fifty Shades", "1")));
             tempHash1.put("MCG1001", new ArrayList<String>(Arrays.asList("The Dark Knight", "20")));
-            tempHash1.put("MCG7000", new ArrayList<String>(Arrays.asList("Shuttle Island", "10")));
+            tempHash1.put("MCG7000", new ArrayList<String>(Arrays.asList("Sectumsempra", "10")));
             tempHash1.put("MCG8000", new ArrayList<String>(Arrays.asList("Angels and Demons", "5")));
             tempHash1.put("MCG9003", new ArrayList<String>(Arrays.asList("Obliviate", "0")));
             tempHash1.put("MCG9001", new ArrayList<String>(Arrays.asList("Narnia", "0")));
@@ -211,6 +228,13 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         return xLib;
     }
 
+    /**This method helps a manager to add the items into the library
+     * @param managerID
+     * @param itemID
+     * @param itemName
+     * @param quantity
+     * @return
+     */
     public String addItem(String managerID, String itemID, String itemName, int quantity) {
 
         String finalString = "";
@@ -226,6 +250,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         System.out.println(value.get(0) + " " + value.get(1));
                         getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + quantity))));
                         this.syncHeap.remove(itemID);
+                        appendStrToFile("This item " + itemID + " is already listed in the " + getServername() + " library and the quantity is increased by " + Integer.toString(quantity)+"\n");
                         return ("This item " + itemID + " is already listed in the " + getServername() + " library and the quantity is increased by " + Integer.toString(quantity));
                     } else {
                         int least = 0;
@@ -240,9 +265,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         int iter = 0;
                         do {
                             System.out.println(waitHolder.get(0));
-                            this.updateMessageHash("Your waitlist for the item " + itemID + " is clear the item is being issued to ", waitHolder.get(0));
+                            this.updateMessageHash("Your waitlist for the item " + itemID + " is clear the item is being issued to ",waitHolder.get(0));
+                            appendStrToFile("Your waitlist for the item " + itemID + " is clear the item is being issued to "+waitHolder.get(0)+"\n");
                             System.out.println("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0));
+                            appendStrToFile("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0)+"\n");
                             finalString = finalString + ("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0) + "\n");
+                            appendStrToFile(finalString);
                             lendHolder.add(waitHolder.get(0));
                             waitHolder.remove(waitHolder.get(0));
                             iter = iter + 1;
@@ -255,6 +283,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             System.out.println(value.get(0) + " " + value.get(1));
                             getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + (quantity - iter)))));
                             finalString = finalString + ("After clearing the waitlist  for the item the remaining " + Integer.toString(quantity - least) + " copies of the item were added to the library. \n");
+                            appendStrToFile(finalString);
                         }
                         getWaitlistRec().put(itemID, waitHolder);
                         getLibLendingRec().put(itemID, lendHolder);
@@ -274,15 +303,18 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list\n");
                             waitHolder.remove(waitHolder.get(iter));
                         }
+                        appendStrToFile(finalString);
                         for (int iter2 = 1; iter2 < lendHolder.size(); iter2++) {
                             this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrower's list", lendHolder.get(iter2));
                             System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrowers' list");
                             finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrower's list\n");
                             lendHolder.remove(lendHolder.get(iter2));
                         }
+                        appendStrToFile(finalString);
                         this.syncHeap.remove(itemID);
 
                     } else {
+                        appendStrToFile("The  value entered is invalid");
                         return ("The  value entered is invalid");
                     }
 
@@ -291,6 +323,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
             } else if (syncHeap.containsKey(itemID)) {
                 System.out.println("The record for this item is currently being used by another user please try after sometime\n");
+                appendStrToFile("The record for this item is currently being used by another user please try after sometime\n");
                 return ("The record for this item is currently being used by another user please try after sometime\n");
             } else {
                 getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemID, Integer.toString(quantity))));
@@ -300,7 +333,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             }
         } else {
             System.out.println("The user is not authorized for this action");
-
+            appendStrToFile("The user is not authorized for this action");
             return ("The user is not authorized for this action");
         }
 
@@ -308,6 +341,13 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     }
 
 
+    /**This method helps a manager to remove an item from the library
+     * @param managerID
+     * @param itemID
+     * @param quantity
+     * @param completeRemove
+     * @return
+     */
     public String removeItem(String managerID, String itemID, int quantity, boolean completeRemove) {
         String finalString = "";
         if (managerID.substring(3, 4).equals("M")) {
@@ -315,9 +355,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             if (!getLibBooksRec().containsKey(itemID)) {
                 if (syncHeap.containsKey(itemID)) {
                     System.out.println("The record for this item is currently being used by another user please try after sometime\n");
+                    appendStrToFile("The record for this item is currently being used by another user please try after sometime\n");
                     return ("The record for this item is currently being used by another user please try after sometime\n");
                 } else {
                     System.out.println("The item does not exist in the library.\n");
+                    appendStrToFile("The item does not exist in the library.\n");
                     return ("The item has not been listed in the library.\n");
                 }
             } else if (completeRemove == true) {
@@ -329,19 +371,26 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 for (int i = 1; i < tempUsers.size(); i++) {
                     msg = "The item " + itemID + " has been completely removed from the library. All the copies are being recalled, please return back the item.\n";
                     updateMessageHash(msg, tempUsers.get(i));
+                    appendStrToFile(msg);
                     msg = "";
                 }
                 ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
                 for (int iter = 0; iter < waitHolder.size(); iter++) {
                     this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", waitHolder.get(iter));
+                    appendStrToFile("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list"+ waitHolder.get(iter));
                     System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
+                    appendStrToFile("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
                     finalString = finalString + ("Notified the user" + waitHolder.get(iter) + "\n");
+                    appendStrToFile(finalString);
                     waitHolder.remove(waitHolder.get(iter));
                 }
                 syncHeap.remove(itemID);
                 System.out.println("Notified all the borrowers to return back");
+                appendStrToFile("Notified all the borrowers to return back");
                 System.out.println("The item has been completely removed from the library.\n");
+                appendStrToFile("The item has been completely removed from the library.\n");
                 return ("The item has been removed from the library availability list.\nAll the borrowers are notified to return back.\n");
+
             } else {
                 if (quantity < 0) {
                     this.syncHeap.put(itemID, managerID);
@@ -362,6 +411,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list\n");
                         lendHolder.remove(lendHolder.get(iter2));
                     }
+                    appendStrToFile(finalString);
                     this.syncHeap.remove(itemID);
 
                 } else {
@@ -376,25 +426,33 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) - quantity))));
 
                             System.out.println("The appropriate amount of item have been removed from the unborrowed section");
+                            appendStrToFile("The appropriate amount of item have been removed from the unborrowed section");
                             return "The appropriate amount of item have been removed from the unborrowed section";
                         } else {
                             getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), "0")));
                             syncHeap.remove(itemID, managerID);
                             System.out.println("The item has been removed from the unborrowed section, nothing is left");
+                            appendStrToFile("The item has been removed from the unborrowed section, nothing is left");
                             return "The item has been removed from the unborrowed section, nothing is left";
                         }
                     } else {
+                        appendStrToFile("The entered value is more than the availablity, cannot remove.");
                         return ("The entered value is more than the availablity, cannot remove.");
                     }
                 }
             }
         } else {
+            appendStrToFile("The User is not authorized for this action\n");
             System.out.println("The User is not authorized for this action");
             return ("The User is not authorized for this action");
         }
         return finalString;
     }
 
+    /**This method lists down the availability items in a server library
+     * @param managerID
+     * @return
+     */
     public String listItemAvailability(String managerID) {
         String prepString = "";
         if (managerID.substring(3, 4).equals("M")) {
@@ -410,11 +468,19 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             return prepString;
         } else {
             System.out.println("The User is not authorized for this action");
+            appendStrToFile("The User is not authorized for this action. \n");
             return ("The User is not authorized for this action");
         }
 
     }
 
+    /**This method removed the item from a library after checking the mentioned validation rules
+     * @param userID
+     * @param itemID
+     * @param numberOfDays
+     * @return
+     * @throws UnknownHostException
+     */
     public String borrowItem(String userID, String itemID, int numberOfDays) throws UnknownHostException {
         String finalString = "";
         if (userID.substring(3, 4).equals("U")) {
@@ -428,6 +494,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     this.syncHeap.put(itemID, userID);
                     if (getLibLendingRec().containsKey(itemID)) {
                         System.out.println("I am inside the lending condition");
+                        appendStrToFile("I am inside the lending condition\n");
                         ArrayList<String> lendHolder = (ArrayList<String>) getLendingDetail(itemID);
                         getLibLendingRec().remove(itemID);
                         if (bRecHolder.get(1) != "0") {
@@ -435,6 +502,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 getLibLendingRec().put(itemID, lendHolder);
                                 getLibBooksRec().put(itemID, bRecHolder);
                                 getSyncHeap().remove(itemID);
+                                appendStrToFile("You already have a copy of this item");
                                 return "You already have a copy of this item";
                             } else {
                                 lendHolder.add(userID);
@@ -445,6 +513,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 getLibBooksRec().put(itemID, bRecHolder);
                                 System.out.println("The book record has been updated");
                                 finalString = finalString + "The book record has been updated. \n";
+                                appendStrToFile(finalString);
                                 getSyncHeap().remove(itemID, userID);
                             }
                         } else {
@@ -455,6 +524,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 finalString = finalString + ("The item is currently not available\n");
                                 finalString = finalString + ("Would you like to be added to the waitlist? Enter Y for Yes and N for No.\n");
                                 finalString = finalString + ("Enter Y for Yes and N for No");
+                                appendStrToFile(finalString);
                                 return finalString;
                             } else {
                                 getLibLendingRec().put(itemID, lendHolder);
@@ -476,6 +546,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             getLibBooksRec().put(itemID, bRecHolder);
                             System.out.println("The book record has been updated");
                             finalString = finalString + "The book record is updated. The item has been successfully borrowed by you.\n";
+                            appendStrToFile(finalString);
                             getSyncHeap().remove(itemID, userID);
                         } else {
                             getLibBooksRec().put(itemID, bRecHolder);
@@ -484,6 +555,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 finalString = finalString + ("The item is currently not available\n");
                                 finalString = finalString + ("Would you like to be added to the waitlist?");
                                 finalString = finalString + ("Enter Y for Yes and N for No");
+                                appendStrToFile(finalString);
                                 return finalString;
                             } else {
                                 return ("Internal data error!");
@@ -497,13 +569,16 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     } else {
                         System.out.println("The item does not exist in the library " + getServername());
                         finalString = finalString + "The item does not exist in the library " + getServername() + "\n";
+                        appendStrToFile(finalString);
                     }
                 }
 
             } else {
                 if (itemID.substring(0, 3).equals("CON")) {
                     System.out.println("I want to go to Concordia to borrow my book");
+                    appendStrToFile("I want to go to Concordia to borrow my book\n");
                     System.out.println("UDP for calling the correct server on the client's behalf");
+                    appendStrToFile("UDP for calling the correct server on the client's behalf\n");
                     String i = "F" + ";" + userID + "#" + itemID + "$" + Integer.toString(numberOfDays) + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
                     byte[] b = (i + "").getBytes();
                     System.out.println(i);
@@ -511,11 +586,13 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     this.dps = new DatagramPacket(b, b.length, ia, 9999);
                     try {
                         System.out.println("I am trying to send the request");
+                        appendStrToFile("I am trying to send the request\n");
                         this.ds.send(dps);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     finalString = finalString + "The call to the remote server has been made \n";
+                    appendStrToFile(finalString);
                     synchronized (lock) {
                         try {
                             lock.wait(10000);
@@ -526,13 +603,16 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         System.out.println("I am in " + getServername());
                         System.out.println("This is inside the method:" + this.globalString);
                         finalString = finalString + this.globalString;
+                        appendStrToFile(finalString);
                         this.globalString = "";
 
                     }
                     //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
                 } else if (itemID.substring(0, 3).equals("MCG")) {
                     System.out.println("I want to go to Mcgill to borrow my book");
+                    appendStrToFile("I want to go to Mcgill to borrow my book\n");
                     System.out.println("UDP for calling the correct server on the client's behalf");
+                    appendStrToFile("UDP for calling the correct server on the client's behalf\n");
                     String i = "F" + ";" + userID + "#" + itemID + "$" + Integer.toString(numberOfDays) + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8082);
                     byte[] b = (i + "").getBytes();
                     System.out.println(i);
@@ -546,6 +626,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         e.printStackTrace();
                     }
                     finalString = finalString + "The call to the remote server has been made \n";
+                    appendStrToFile(finalString);
                     synchronized (lock) {
                         try {
                             lock.wait(100);
@@ -554,6 +635,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         }
                         System.out.println("");
                         System.out.println("I am in " + getServername());
+                        appendStrToFile("I am in " + getServername()+"\n");
                         System.out.println("This is inside the method:" + this.globalString);
                         finalString = finalString + this.globalString;
                         this.globalString = "";
@@ -564,8 +646,10 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 }else if(itemID.substring(0, 3).equals("MON"))
                 {
                     {
-                        System.out.println("I want to go to Concordia to borrow my book");
+                        System.out.println("I want to go to University of Montreal to borrow my book");
+                        appendStrToFile("I want to go to University of Montreal to borrow my book\n");
                         System.out.println("UDP for calling the correct server on the client's behalf");
+                        appendStrToFile("UDP for calling the correct server on the client's behalf\n");
                         String i = "F" + ";" + userID + "#" + itemID + "$" + Integer.toString(numberOfDays) + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8083);
                         byte[] b = (i + "").getBytes();
                         System.out.println(i);
@@ -573,11 +657,13 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         this.dps = new DatagramPacket(b, b.length, ia, 9999);
                         try {
                             System.out.println("I am trying to send the request");
+                            appendStrToFile("I am trying to send a request\n");
                             this.ds.send(dps);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                         finalString = finalString + "The call to the remote server has been made \n";
+                        appendStrToFile(finalString);
                         synchronized (lock) {
                             try {
                                 lock.wait(10000);
@@ -586,8 +672,10 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             }
                             System.out.println("");
                             System.out.println("I am in " + getServername());
+                            appendStrToFile("I am in \" + getServername()\n");
                             System.out.println("This is inside the method:" + this.globalString);
                             finalString = finalString + this.globalString;
+                            appendStrToFile(finalString);
                             this.globalString = "";
 
                         }
@@ -595,10 +683,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     }
 
                 }else {
+                    appendStrToFile("There is no suitable server for this item.\n");
                     return "There is no suitable server for this item.";
                 }
             }
         } else {
+            appendStrToFile("The User is not authorized for this action");
             System.out.println("The User is not authorized for this action");
             return ("The User is not authorized for this action");
         }
@@ -606,8 +696,16 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     }
 
+    /**This method helps a user to find a item in his/her own library and other respective libraries.
+     * @param userID
+     * @param itemName
+     * @return
+     * @throws UnknownHostException
+     */
     public String findItem(String userID, String itemName) throws UnknownHostException {
+        String personal ="";
         String finalString = "Items matching your entry at " + getServername() + " are:\n";
+        appendStrToFile(finalString);
         if (userID.substring(3, 4).equals("U")) {
             Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
             for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
@@ -616,10 +714,14 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
                 }
             }
+            appendStrToFile(finalString);
+            personal =  finalString;
             System.out.println("Send a UDP call to other servers for this and list down their items");
+            appendStrToFile("Send a UDP call to other servers for this and list down their items\n");
             {
                 if (this.universalPort != 8081) {
                     System.out.println("UDP for calling the correct server on the client's behalf to 8081");
+                    appendStrToFile("UDP for calling the correct server on the client's behalf to 8081\n");
                     String i = "X" + ";" + userID + "#" + itemName + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
                     byte[] b = (i + "").getBytes();
                     InetAddress ia = InetAddress.getLocalHost();
@@ -630,6 +732,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         e.printStackTrace();
                     }
                     finalString = finalString + "The call to the remote server has been made \n";
+                    appendStrToFile(finalString);
                     synchronized (lock) {
                         try {
                             lock.wait(10000);
@@ -639,16 +742,20 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         System.out.println("");
                         System.out.println("I am in " + getServername());
                         System.out.println("This is inside the method:" + this.globalString);
+                        appendStrToFile("This is inside the method:" + this.globalString+"\n");
                         finalString = finalString + this.globalString;
                         System.out.println("Here inside the end of the first call: " + finalString);
+                        appendStrToFile("Here inside the end of the first call: " + finalString);
 
                     }
                 }
                 if (this.universalPort != 8082) {
                     //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
                     System.out.println("UDP for calling the correct server on the client's behalf to 8082");
+                    appendStrToFile("UDP for calling the correct server on the client's behalf to 8082\n");
                     String i1 = "Y" + ";" + userID + "#" + itemName + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8082);
                     System.out.println(i1);
+                    appendStrToFile(i1);
                     byte[] b1 = (i1 + "").getBytes();
                     InetAddress ia1 = InetAddress.getLocalHost();
                     this.dps = new DatagramPacket(b1, b1.length, ia1, 9999);
@@ -658,6 +765,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         e.printStackTrace();
                     }
                     finalString = finalString + "The call to the remote server has been made \n";
+                    appendStrToFile(finalString);
                     synchronized (lock) {
                         try {
                             lock.wait(10000);
@@ -666,8 +774,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         }
                         System.out.println("");
                         System.out.println("I am in " + getServername());
+                        appendStrToFile("I am in " + getServername());
                         System.out.println("This is inside the method:" + this.globalString);
+                        appendStrToFile("This is inside the method:" + this.globalString);
                         finalString = finalString + this.globalString;
+                        appendStrToFile(finalString);
                         System.out.println("Here inside the end of the second call: " + finalString);
 
 
@@ -678,8 +789,10 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     {
                         //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
                         System.out.println("UDP for calling the correct server on the client's behalf to 8083");
+                        appendStrToFile("UDP for calling the correct server on the client's behalf to 8083\n");
                         String i1 = "Y" + ";" + userID + "#" + itemName + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8083);
                         System.out.println(i1);
+                        appendStrToFile(i1);
                         byte[] b1 = (i1 + "").getBytes();
                         InetAddress ia1 = InetAddress.getLocalHost();
                         this.dps = new DatagramPacket(b1, b1.length, ia1, 9999);
@@ -689,6 +802,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             e.printStackTrace();
                         }
                         finalString = finalString + "The call to the remote server has been made \n";
+                        appendStrToFile(finalString);
                         synchronized (lock) {
                             try {
                                 lock.wait(10000);
@@ -697,9 +811,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             }
                             System.out.println("");
                             System.out.println("I am in " + getServername());
+                            appendStrToFile("I am in " + getServername());
                             System.out.println("This is inside the method:" + this.globalString);
+                            appendStrToFile("This is inside the method:" + this.globalString);
                             finalString = finalString + this.globalString;
                             System.out.println("Here inside the end of the second call: " + finalString);
+                            appendStrToFile("Here inside the end of the second call: " + finalString);
 
 
                         }
@@ -711,14 +828,20 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
         } else {
             System.out.println("The User is not authorized for this action");
+            appendStrToFile("The User is not authorized for this action");
             return ("The User is not authorized for this action");
 
         }
         System.out.println(finalString);
-        return finalString;
+        return (personal +finalString);
 
     }
 
+    /** This method helps a user to validate and return their issued books
+     * @param userID
+     * @param itemID
+     * @return
+     */
     public String returnItem(String userID, String itemID) {
         String finalString = "";
         if (userID.substring(3, 4).equals("U")) {
@@ -736,16 +859,21 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             getLibBooksRec().put(itemID, bRecHolder);
                             getSyncHeap().remove(itemID);
                             System.out.println("I am inside the lendholder check");
+                            appendStrToFile("I am inside the lendholder check\n");
                             finalString = finalString + "Officially, you don't have a copy of this item. So you cannot return. Please contact your manager";
+                            appendStrToFile(finalString);
                         } else {
                             System.out.println("I am after the lendholder check");
+                            appendStrToFile("I am after the lendholder check");
                             if (getWaitlistRec().containsKey(itemID)) {
                                 ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
                                 getWaitlistRec().remove(itemID);
                                 lendHolder.remove(userID);
                                 lendHolder.add(waitHolder.get(0));
                                 updateMessageHash("Your waitlist for the item " + itemID + " is clear + the item has been issued to you", waitHolder.get(0));
+                                appendStrToFile("Your waitlist for the item " + itemID + " is clear + the item has been issued to you"+ waitHolder.get(0));
                                 System.out.println("The book has been issued to the first waitlisted person.");
+                                appendStrToFile("The book has been issued to the first waitlisted person.");
                                 waitHolder.remove(waitHolder.get(0));
                                 finalString = finalString + "The book has been successfully returned\n";
                                 getLibLendingRec().put(itemID, lendHolder);
@@ -783,24 +911,33 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         }
         System.out.println("I am in the end");
         System.out.println(finalString);
+        appendStrToFile(finalString);
         return finalString;
 
     }
 
+    /**This method verifies the ID and the connection
+     * @param ID
+     * @return
+     */
     public String verify(String ID) {
         String finalString = "";
         System.out.println("*************************************************************************");
         System.out.println("Verifying the connection at " + getServername() + " Library.");
+        appendStrToFile("Verifying the connection at " + getServername() + " Library.");
         if (getServername().substring(0, 3).equals(ID.substring(0, 3))) {
             System.out.println("The ID is connected to right server");
+            appendStrToFile("The ID is connected to right server");
             finalString = finalString + "The ID is connected to right server.\n";
         } else {
             System.out.println("The ID is not present on this server");
+            appendStrToFile("The ID is not present on this server");
             finalString = finalString + "The ID has vaild user type.\n";
             return ("The ID is incorrect on this server");
         }
         if (ID.substring(3, 4).equals("M") || ID.substring(3, 4).equals("U")) {
             System.out.println("The ID has correct user type");
+            appendStrToFile("The ID has correct user type");
             finalString = finalString + "The ID has vaild user type.\n";
         } else {
             System.out.println("The user type is incorrect");
@@ -811,6 +948,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 System.out.println("I am inside here");
                 finalString = finalString + " You have new messages from the server.\n" + this.getUserMessageStr((ID)) + "\n";
                 System.out.println("I am after the call to the message method");
+                appendStrToFile("I am after the call to the message method");
             } else {
                 finalString = finalString + "The ID has vaild user type.\n";
                 finalString = finalString + "No new Messages for you. \n";
@@ -818,6 +956,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         } catch (NullPointerException e) {
             finalString = finalString + "No new Messages for you. \n";
             System.out.println("No new messages for you");
+            appendStrToFile("No new messages for you");
         }
         if (ID.substring(3, 4).equals("M")) {
             System.out.println("I am inside here in the options panel");
@@ -836,7 +975,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             finalString = finalString + "Else you can lookup using our find item feature.\n";
         }
 
-
+        appendStrToFile(finalString);
         return finalString;
     }
 
@@ -844,12 +983,17 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         return false;
     }
 
+    /**getter  method for a book
+     * @param ID
+     * @return
+     */
     public ArrayList<String> getBookDetail(String ID) {
         try {
             if (getLibBooksRec().containsKey(ID)) {
                 return (ArrayList<String>) getLibBooksRec().get(ID);
             } else {
                 System.out.println("The ID is incorrect, it does not exist in the library " + getServername());
+                appendStrToFile("The ID is incorrect, it does not exist in the library " + getServername());
                 return null;
             }
 
@@ -858,12 +1002,17 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         }
     }
 
+    /**getter method for lendnig records
+     * @param ID
+     * @return
+     */
     public ArrayList<String> getLendingDetail(String ID) {
         try {
             if (getLibLendingRec().containsKey(ID)) {
                 return (ArrayList<String>) getLibLendingRec().get(ID);
             } else {
                 System.out.println("The action is incorrect, item has never been borrowed yet at " + getServername());
+                appendStrToFile("The action is incorrect, item has never been borrowed yet at " + getServername());
                 ArrayList<String> returnParm = new ArrayList<String>();
                 returnParm.add("null");
                 return returnParm;
@@ -871,6 +1020,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
         } catch (NullPointerException E) {
             System.out.println("The action is incorrect, item has never been borrowed yet at " + getServername());
+            appendStrToFile("The action is incorrect, item has never been borrowed yet at " + getServername());
             ArrayList<String> returnParm = new ArrayList<String>();
             returnParm.add("null");
             return returnParm;
@@ -882,16 +1032,24 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         return this.syncHeap;
     }
 
+    /**synchoronization heap setter
+     * @param syncHeap
+     */
     public void setSyncHeap(HashMap<String, String> syncHeap) {
         this.syncHeap = syncHeap;
     }
 
+    /**getter for wait detail
+     * @param ID
+     * @return
+     */
     public ArrayList<String> getWaitdetail(String ID) {
         try {
             if (getWaitlistRec().containsKey(ID)) {
                 return (ArrayList<String>) getWaitlistRec().get(ID);
             } else {
                 System.out.println("The action is incorrect, item does not have a waitlist at " + getServername());
+                appendStrToFile("The action is incorrect, item does not have a waitlist at " + getServername());
                 ArrayList<String> returnParm = new ArrayList<String>();
                 returnParm.add("null");
                 return returnParm;
@@ -899,6 +1057,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
         } catch (NullPointerException E) {
             System.out.println("The action is incorrect, item does not have a waitlist at " + getServername());
+            appendStrToFile("The action is incorrect, item does not have a waitlist at " + getServername());
             ArrayList<String> returnParm = new ArrayList<String>();
             returnParm.add("null");
             return returnParm;
@@ -906,6 +1065,10 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     }
 
+    /**update messages in the inbox of a user
+     * @param msg
+     * @param userID
+     */
     public void updateMessageHash(String msg, String userID) {
         HashMap<String, ArrayList<String>> localMsgCopy = (HashMap<String, ArrayList<String>>) getUserUpdateMessages();
         ArrayList<String> tempStore = new ArrayList<String>();
@@ -916,23 +1079,33 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             tempStore.add(msg);
             getUserUpdateMessages().put(userID, tempStore);
             System.out.println("Message has been added to the profile of " + userID + "\n");
+            appendStrToFile("Message has been added to the profile of " + userID + "\n");
         } else {
             tempStore.add(msg);
             getUserUpdateMessages().put(userID, tempStore);
             System.out.println("Message has been added to the profile of " + userID + "\n");
+            appendStrToFile("Message has been added to the profile of " + userID + "\n");
         }
     }
 
+    /**Waiting list handling method
+     * @param parm
+     * @param itemID
+     * @param userID
+     * @return
+     */
     public String addToWait(String parm, String itemID, String userID) {
         if (parm.equals("Y")) {
             if (getWaitlistRec().containsKey(itemID)) {
                 ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
                 if (waitHolder.contains(userID)) {
+                    appendStrToFile("You are already in the waitlist for this item");
                     return ("You are already in the waitlist for this item");
                 } else {
                     getWaitlistRec().remove(itemID);
                     waitHolder.add(userID);
                     getWaitlistRec().put(itemID, waitHolder);
+                    appendStrToFile("You have been sucessfully waitlisted for the item " + itemID);
                     return ("You have been sucessfully waitlisted for the item " + itemID);
                 }
             } else {
@@ -940,14 +1113,19 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
                 waitHolder.add(userID);
                 getWaitlistRec().put(bRecHolder.get(0), waitHolder);
+                appendStrToFile ("You have been sucessfully waitlisted for the item " + itemID);
                 return ("You have been sucessfully waitlisted for the item " + itemID);
 
             }
         } else {
+            appendStrToFile ("Invalid response");
             return ("Invalid response");
         }
     }
 
+    /**Method which managers all the interserver communications
+     * @throws IOException
+     */
     public void interServerInteractor() throws IOException {
         while(true) {
             if (this.getServername().equals("CONCORDIA")) {
@@ -955,18 +1133,22 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 b1 = new byte[1024];
                 this.dpr = new DatagramPacket(b1, b1.length);
                 System.out.println("I am open for listen");
+                appendStrToFile("I am open for listen");
                 InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8081);
                 ds1.bind(address);
                 this.ds1.receive(dpr);
                 System.out.println("I am in " + getServername());
+                appendStrToFile("I am in " + getServername());
                 String result = null;
                 result = new String(dpr.getData());
                 System.out.println(result);
                 System.out.println(result.charAt(0));
                 if (result.startsWith("F")) {
                     System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                    appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
 
                     System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                    appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
                     result = result.trim();
                     String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                     String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
@@ -981,6 +1163,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         this.dps = new DatagramPacket(b, b.length, ia, 9999);
                         //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
                         System.out.println("I am sending the packet");
+                        appendStrToFile("I am sending the packet");
                         this.ds.send(this.dps);
                     } catch (UnknownHostException e) {
                         e.printStackTrace();
@@ -993,11 +1176,14 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         String temp1 = result.substring(2, result.indexOf('@'));
                         this.globalString = temp1;
                         System.out.println("At the end " + this.globalString);
+                        appendStrToFile("At the end " + this.globalString);
 
                     } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
                         System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                        appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
                         System.out.println(result);
                         System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                        appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
                         result = result.trim();
                         String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                         String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
@@ -1006,7 +1192,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
                             for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
                                 ArrayList<String> valueHolder = entry.getValue();
-                                if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
+                                if (valueHolder.get(0).matches(vitemName) && (valueHolder.get(1) != "0")) {
                                     finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
                                 }
                             }
@@ -1018,6 +1204,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 ia = InetAddress.getLocalHost();
                                 this.dps = new DatagramPacket(b, b.length, ia, 9999);
                                 //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                                appendStrToFile("I am sending the packet");
                                 System.out.println("I am sending the packet");
                                 this.ds.send(this.dps);
                             } catch (UnknownHostException e) {
@@ -1032,7 +1219,9 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         result = result.trim();
                         String temp1 = result.substring(2, result.indexOf('@'));
                         this.globalString = temp1;
+
                         System.out.println("At the end " + this.globalString);
+                        appendStrToFile("At the end " + this.globalString);
                     }
                 }
             }
@@ -1041,10 +1230,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 b1 = new byte[1024];
                 this.dpr = new DatagramPacket(b1, b1.length);
                 System.out.println("I am open for listen");
+                appendStrToFile("I am open for listen");
                 InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8082);
                 ds1.bind(address);
                 this.ds1.receive(dpr);
                 System.out.println("I am in " + getServername());
+                appendStrToFile("I am in " + getServername());
                 String result = null;
                 result = new String(dpr.getData());
                 result = result.trim();
@@ -1052,7 +1243,9 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 System.out.println(result.charAt(0));
                 if (result.startsWith("F")) {
                     System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                    appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
                     System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                    appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
                     result = result.trim();
                     String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                     String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
@@ -1061,6 +1254,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                     String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
                     System.out.println("The found matches on this server " + rece);
+                    appendStrToFile("The found matches on this server " + rece);
                     byte[] b = (rece + "").getBytes();
                     InetAddress ia = null;
                     try {
@@ -1068,6 +1262,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         this.dps = new DatagramPacket(b, b.length, ia, 9999);
                         //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
                         System.out.println("I am sending the packet");
+                        appendStrToFile("I am sending the packet");
                         this.ds.send(this.dps);
                     } catch (UnknownHostException e) {
                         e.printStackTrace();
@@ -1079,12 +1274,15 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         result = result.trim();
                         String temp1 = result.substring(2, result.indexOf('@'));
                         this.globalString = temp1;
+                        appendStrToFile("At the end " + this.globalString);
                         System.out.println("At the end " + this.globalString);
 
                     } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
                         System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                        appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
                         System.out.println(result);
                         System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                        appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
                         result = result.trim();
                         String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                         String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
@@ -1093,13 +1291,15 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
                             for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
                                 ArrayList<String> valueHolder = entry.getValue();
-                                if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
+                                if (valueHolder.get(0).matches(vitemName) && (valueHolder.get(1) != "0")) {
                                     finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
                                 }
                             }
                             System.out.println(finalString);
+                            appendStrToFile(finalString);
                             String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
                             System.out.println(rece);
+                            appendStrToFile(rece);
                             byte[] b = (rece + "").getBytes();
                             InetAddress ia = null;
                             try {
@@ -1107,6 +1307,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 this.dps = new DatagramPacket(b, b.length, ia, 9999);
                                 //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
                                 System.out.println("I am sending the packet");
+                                appendStrToFile("I am sending the packet");
                                 this.ds.send(this.dps);
                             } catch (UnknownHostException e) {
                                 e.printStackTrace();
@@ -1121,6 +1322,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         String temp1 = result.substring(2, result.indexOf('@'));
                         this.globalString = temp1;
                         System.out.println("At the end " + this.globalString);
+                        appendStrToFile("At the end " + this.globalString);
                     }
 
                 }
@@ -1131,10 +1333,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     b1 = new byte[1024];
                     this.dpr = new DatagramPacket(b1, b1.length);
                     System.out.println("I am open for listen");
+                    appendStrToFile("I am open for listen");
                     InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8083);
                     ds1.bind(address);
                     this.ds1.receive(dpr);
                     System.out.println("I am in " + getServername());
+                    appendStrToFile("I am in " + getServername());
                     String result = null;
                     result = new String(dpr.getData());
                     result = result.trim();
@@ -1142,7 +1346,9 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     System.out.println(result.charAt(0));
                     if (result.startsWith("F")) {
                         System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                        appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
                         System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                        appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
                         result = result.trim();
                         String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                         String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
@@ -1151,6 +1357,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                         String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
                         System.out.println("The found matches on this server " + rece);
+                        appendStrToFile("The found matches on this server " + rece);
                         byte[] b = (rece + "").getBytes();
                         InetAddress ia = null;
                         try {
@@ -1158,6 +1365,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             this.dps = new DatagramPacket(b, b.length, ia, 9999);
                             //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
                             System.out.println("I am sending the packet");
+                            appendStrToFile("I am sending the packet");
                             this.ds.send(this.dps);
                         } catch (UnknownHostException e) {
                             e.printStackTrace();
@@ -1170,11 +1378,15 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             String temp1 = result.substring(2, result.indexOf('@'));
                             this.globalString = temp1;
                             System.out.println("At the end " + this.globalString);
+                            appendStrToFile("At the end " + this.globalString);
 
                         } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
                             System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                            appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
                             System.out.println(result);
+                            appendStrToFile(result);
                             System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                            appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
                             result = result.trim();
                             String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                             String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
@@ -1183,13 +1395,15 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
                                 for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
                                     ArrayList<String> valueHolder = entry.getValue();
-                                    if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
+                                    if (valueHolder.get(0).matches(vitemName) && (valueHolder.get(1) != "0")) {
                                         finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
                                     }
                                 }
                                 System.out.println(finalString);
+                                appendStrToFile(finalString);
                                 String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
                                 System.out.println(rece);
+                                appendStrToFile(rece);
                                 byte[] b = (rece + "").getBytes();
                                 InetAddress ia = null;
                                 try {
@@ -1197,6 +1411,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                     this.dps = new DatagramPacket(b, b.length, ia, 9999);
                                     //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
                                     System.out.println("I am sending the packet");
+                                    appendStrToFile("I am sending the packet");
                                     this.ds.send(this.dps);
                                 } catch (UnknownHostException e) {
                                     e.printStackTrace();
@@ -1211,6 +1426,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             String temp1 = result.substring(2, result.indexOf('@'));
                             this.globalString = temp1;
                             System.out.println("At the end " + this.globalString);
+                            appendStrToFile("At the end " + this.globalString);
                         }
 
                     }
@@ -1233,6 +1449,9 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     }
 
 
+    /**Log generator method
+     * @param str
+     */
     public static void appendStrToFile(String str)
     {
         try {
