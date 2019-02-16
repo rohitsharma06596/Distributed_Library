@@ -1,6 +1,8 @@
 package client;
 
 import serverInterface.Interface_server;
+
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -92,7 +94,7 @@ public class Client_Handler {
             return true;
         }
     }
-    public void appInteractor() throws RemoteException, InterruptedException {
+    public void appInteractor() throws RemoteException, InterruptedException, UnknownHostException {
         boolean continu = true;
         while(continu)
         {

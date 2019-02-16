@@ -2,23 +2,29 @@ package server;
 
 import serverInterface.Interface_server;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
+import java.io.IOException;
+import java.net.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
-public class Server_Base extends UnicastRemoteObject implements Interface_server {
+public class Server_Base extends UnicastRemoteObject implements Interface_server, Runnable {
 
     private String servername;
+    private String globalString;
     private HashMap<String, ArrayList<String>> userUpdateMessages;
     private HashMap<String, HashMap> libLendingRec;
     private HashMap waitlistRec;
     private HashMap libBooksRec;
     private HashMap<String, String> syncHeap;
     private DatagramSocket ds;
-    private DatagramPacket dp;
+    private DatagramSocket ds1;
+    private DatagramPacket dps;
+    private DatagramPacket dpr;
+    private Thread t;
+    private final Object lock = new Object();
+    private int universalPort;
+
 
     public HashMap<String, ArrayList<String>> getUserUpdateMessages() {
         return this.userUpdateMessages;
@@ -45,10 +51,15 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     }
 
-    public Server_Base(String name) throws RemoteException {
+    public Server_Base(String name) throws IOException {
         this.servername = name;
         this.syncHeap = new HashMap<String, String>();
         this.userUpdateMessages = new HashMap<String, ArrayList<String>>();
+      //  this.ds = new DatagramSocket();
+        this.ds1 = new DatagramSocket(null);
+        this.t = new Thread(this, getServername());
+        this.t.start();
+
     }
 
 
@@ -87,6 +98,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     public Server_Base loadServerRec(Server_Base xLib) {
         if (xLib.getServername().equals("CONCORDIA")) {
+            try {
+                xLib.ds = new DatagramSocket();
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
 
             HashMap<String, ArrayList<String>> tempStore = new HashMap<String, ArrayList<String>>();
             tempStore.put("CON1000", new ArrayList<String>(Arrays.asList("Star Wars", "CONU4041", "CONU4042", "CONU4043", "CONU4044", "CONU4045")));
@@ -114,8 +130,14 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             xLib.setLibLendingRec(tempStore);
             xLib.setLibBooksRec(tempHash1);
             xLib.setWaitlistRec(tempHash2);
+            xLib.universalPort = 8081;
 
         } else if (xLib.getServername().equals("MCGILL")) {
+            try {
+                xLib.ds = new DatagramSocket();
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
             HashMap<String, ArrayList<String>> tempStore = new HashMap<String, ArrayList<String>>();
             tempStore.put("MCG1000", new ArrayList<String>(Arrays.asList("Fifty Shades", "MCGU4141", "MCGU4142", "MCGU4143", "MCGU4144", "MCGU4145")));
             tempStore.put("MCG1001", new ArrayList<String>(Arrays.asList("The Dark Knight", "MCGU5151", "MCGU5152", "MCGU5153", "MCGU5154")));
@@ -142,8 +164,14 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             xLib.setLibLendingRec(tempStore);
             xLib.setLibBooksRec(tempHash1);
             xLib.setWaitlistRec(tempHash2);
+            xLib.universalPort = 8082;
 
         } else if (xLib.getServername().equals("MONTREALU")) {
+            try {
+                xLib.ds = new DatagramSocket();
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
             HashMap<String, ArrayList<String>> tempStore = new HashMap<String, ArrayList<String>>();
             tempStore.put("MON1000", new ArrayList<String>(Arrays.asList("Pedigree", "MONU4241", "MONU4242", "MONU4243", "MONU4244", "MONU4245")));
             tempStore.put("MON1001", new ArrayList<String>(Arrays.asList("Castaway", "MONU5251", "MONU5252", "MONU5253", "MONU5254")));
@@ -160,6 +188,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             tempHash1.put("MON9002", new ArrayList<String>(Arrays.asList("Sectumsempra", "12")));
             tempHash1.put("MON9100", new ArrayList<String>(Arrays.asList("Narnia", "0")));
             tempHash1.put("MON9102", new ArrayList<String>(Arrays.asList("Sectumsempra", "10")));
+            tempHash1.put("MON9106", new ArrayList<String>(Arrays.asList("light years", "10")));
 
 
             HashMap<String, ArrayList<String>> tempHash2 = new HashMap<String, ArrayList<String>>();
@@ -170,6 +199,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             xLib.setLibLendingRec(tempStore);
             xLib.setLibBooksRec(tempHash1);
             xLib.setWaitlistRec(tempHash2);
+            xLib.universalPort = 8083;
 
         } else {
             System.out.println("Server is invalid");
@@ -187,91 +217,90 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 System.out.println(getLibBooksRec().get(itemID));
                 ArrayList<String> value = (ArrayList<String>) getLibBooksRec().get(itemID);
                 if (quantity > 0) {
-                        this.syncHeap.put(itemID, managerID);
-                        if (!(getWaitlistRec().containsKey(itemID))) {
+                    this.syncHeap.put(itemID, managerID);
+                    if (!(getWaitlistRec().containsKey(itemID))) {
+                        getLibBooksRec().remove(itemID);
+                        System.out.println(value.get(0) + " " + value.get(1));
+                        getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + quantity))));
+                        this.syncHeap.remove(itemID);
+                        return ("This item " + itemID + " is already listed in the " + getServername() + " library and the quantity is increased by " + Integer.toString(quantity));
+                    } else {
+                        int least = 0;
+                        ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                        ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
+                        getLibLendingRec().remove(itemID);
+                        getWaitlistRec().remove(itemID);
+                        if (quantity < waitHolder.size())
+                            least = quantity;
+                        else
+                            least = waitHolder.size();
+                        int iter = 0;
+                        do {
+                            System.out.println(waitHolder.get(0));
+                            this.updateMessageHash("Your waitlist for the item " + itemID + " is clear the item is being issued to ", waitHolder.get(0));
+                            System.out.println("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0));
+                            finalString = finalString + ("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0) + "\n");
+                            lendHolder.add(waitHolder.get(0));
+                            waitHolder.remove(waitHolder.get(0));
+                            iter = iter + 1;
+                            System.out.println(iter);
+                            System.out.println(least);
+                            System.out.println(waitHolder);
+                        } while (iter < least);
+                        if (quantity != iter) {
                             getLibBooksRec().remove(itemID);
                             System.out.println(value.get(0) + " " + value.get(1));
-                            getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + quantity))));
-                            this.syncHeap.remove(itemID);
-                            return ("This item "+itemID+" is already listed in the "+getServername()+ " library and the quantity is increased by "+ Integer.toString(quantity));
-                        } else {
-                            int least = 0;
-                            ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
-                            ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
-                            getLibLendingRec().remove(itemID);
-                            getWaitlistRec().remove(itemID);
-                            if (quantity < waitHolder.size())
-                                least = quantity;
-                            else
-                                least = waitHolder.size();
-                            int iter = 0;
-                            do {
-                                System.out.println(waitHolder.get(0));
-                                this.updateMessageHash("Your waitlist for the item " + itemID + " is clear the item is being issued to ", waitHolder.get(0));
-                                System.out.println("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0));
-                                finalString = finalString + ("Item " + itemID + " is automatically used to clear the waitlist, the item has been issued to " + waitHolder.get(0) + "\n");
-                                lendHolder.add(waitHolder.get(0));
-                                waitHolder.remove(waitHolder.get(0));
-                                iter = iter + 1;
-                                System.out.println(iter);
-                                System.out.println(least);
-                                System.out.println(waitHolder);
-                            } while (iter < least);
-                            if (quantity != iter) {
-                                getLibBooksRec().remove(itemID);
-                                System.out.println(value.get(0) + " " + value.get(1));
-                                getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + (quantity - iter)))));
-                                finalString = finalString + ("After clearing the waitlist  for the item the remaining " + Integer.toString(quantity - least) + " copies of the item were added to the library. \n");
-                            }
-                            getWaitlistRec().put(itemID, waitHolder);
-                            getLibLendingRec().put(itemID, lendHolder);
+                            getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList((value.get(0)), Integer.toString(Integer.parseInt(value.get(1)) + (quantity - iter)))));
+                            finalString = finalString + ("After clearing the waitlist  for the item the remaining " + Integer.toString(quantity - least) + " copies of the item were added to the library. \n");
                         }
-                        this.syncHeap.remove(itemID);
-                    }
-            else {
-                if (quantity < 0) {
-                    this.syncHeap.put(itemID, managerID);
-                    ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
-                    ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
-                    getLibLendingRec().remove(itemID);
-                    getWaitlistRec().remove(itemID);
-
-                    for (int iter = 0; iter < waitHolder.size(); iter++) {
-                        this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", waitHolder.get(iter));
-                        System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
-                        finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list\n");
-                        waitHolder.remove(waitHolder.get(iter));
-                    }
-                    for (int iter2 = 1; iter2 < lendHolder.size(); iter2++) {
-                        this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrower's list", lendHolder.get(iter2));
-                        System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrowers' list");
-                        finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrower's list\n");
-                        lendHolder.remove(lendHolder.get(iter2));
+                        getWaitlistRec().put(itemID, waitHolder);
+                        getLibLendingRec().put(itemID, lendHolder);
                     }
                     this.syncHeap.remove(itemID);
-
                 } else {
-                    return ("The  value entered is invalid");
+                    if (quantity < 0) {
+                        this.syncHeap.put(itemID, managerID);
+                        ArrayList<String> lendHolder = (ArrayList<String>) getLibLendingRec().get(itemID);
+                        ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                        getLibLendingRec().remove(itemID);
+                        getWaitlistRec().remove(itemID);
+
+                        for (int iter = 0; iter < waitHolder.size(); iter++) {
+                            this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", waitHolder.get(iter));
+                            System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
+                            finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list\n");
+                            waitHolder.remove(waitHolder.get(iter));
+                        }
+                        for (int iter2 = 1; iter2 < lendHolder.size(); iter2++) {
+                            this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrower's list", lendHolder.get(iter2));
+                            System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrowers' list");
+                            finalString = finalString + ("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the borrower's list\n");
+                            lendHolder.remove(lendHolder.get(iter2));
+                        }
+                        this.syncHeap.remove(itemID);
+
+                    } else {
+                        return ("The  value entered is invalid");
+                    }
+
+
                 }
 
-
-            }
-
-        } else if (syncHeap.containsKey(itemID)) {
+            } else if (syncHeap.containsKey(itemID)) {
                 System.out.println("The record for this item is currently being used by another user please try after sometime\n");
-            return ("The record for this item is currently being used by another user please try after sometime\n");
-        } else {
-            getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemID, Integer.toString(quantity))));
+                return ("The record for this item is currently being used by another user please try after sometime\n");
+            } else {
+                getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemID, Integer.toString(quantity))));
                 System.out.println("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
-            return ("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
+                return ("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
+            }
+        } else {
+            System.out.println("The user is not authorized for this action");
+            return ("The user is not authorized for this action");
         }
-    } else{
-        System.out.println("The user is not authorized for this action");
-        return ("The user is not authorized for this action");
-    }
 
         return finalString;
-}
+    }
 
 
     public String removeItem(String managerID, String itemID, int quantity, boolean completeRemove) {
@@ -301,7 +330,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 for (int iter = 0; iter < waitHolder.size(); iter++) {
                     this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", waitHolder.get(iter));
                     System.out.println("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list");
-                    finalString = finalString + ("Notified the user" + waitHolder.get(iter)+"\n");
+                    finalString = finalString + ("Notified the user" + waitHolder.get(iter) + "\n");
                     waitHolder.remove(waitHolder.get(iter));
                 }
                 syncHeap.remove(itemID);
@@ -332,7 +361,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                 } else {
                     ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
-                    if(quantity <= Integer.parseInt(bRecHolder.get(1))) {
+                    if (quantity <= Integer.parseInt(bRecHolder.get(1))) {
                         System.out.println(getLibBooksRec().get(itemID));
                         ArrayList<String> value = (ArrayList<String>) getLibBooksRec().get(itemID);
                         syncHeap.put(itemID, managerID);
@@ -349,13 +378,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             System.out.println("The item has been removed from the unborrowed section, nothing is left");
                             return "The item has been removed from the unborrowed section, nothing is left";
                         }
-                    }
-                    else{
+                    } else {
                         return ("The entered value is more than the availablity, cannot remove.");
                     }
                 }
             }
-        }else {
+        } else {
             System.out.println("The User is not authorized for this action");
             return ("The User is not authorized for this action");
         }
@@ -382,17 +410,17 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     }
 
-    public String borrowItem(String userID, String itemID, int numberOfDays){
+    public String borrowItem(String userID, String itemID, int numberOfDays) throws UnknownHostException {
         String finalString = "";
         if (userID.substring(3, 4).equals("U")) {
             if (itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
-                if(getLibBooksRec().containsKey(itemID)) {
+                if (getLibBooksRec().containsKey(itemID)) {
                     ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
                     getLibBooksRec().remove(itemID);
                     System.out.println(getSyncHeap());
                     System.out.println(itemID);
                     System.out.println(userID);
-                    this.syncHeap.put(itemID,userID);
+                    this.syncHeap.put(itemID, userID);
                     if (getLibLendingRec().containsKey(itemID)) {
                         System.out.println("I am inside the lending condition");
                         ArrayList<String> lendHolder = (ArrayList<String>) getLendingDetail(itemID);
@@ -430,9 +458,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 return ("Internal data error!");
                             }
                         }
-                    }
-                    else
-                    {
+                    } else {
                         if (bRecHolder.get(1) != "0") {
                             ArrayList<String> lendHolder = new ArrayList<String>();
                             System.out.println(bRecHolder);
@@ -446,9 +472,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             System.out.println("The book record has been updated");
                             finalString = finalString + "The book record is updated. The item has been successfully borrowed by you.\n";
                             getSyncHeap().remove(itemID, userID);
-                        }
-                        else
-                        {
+                        } else {
                             getLibBooksRec().put(itemID, bRecHolder);
                             getSyncHeap().remove(itemID, userID);
                             if (bRecHolder.get(1) == "0") {
@@ -461,31 +485,123 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             }
 
                         }
-                }
-            }
-                else{
+                    }
+                } else {
                     if (getSyncHeap().containsKey(itemID)) {
                         return "The record for this item is currently being used by another user\n";
-                    }
-                    else {
+                    } else {
                         System.out.println("The item does not exist in the library " + getServername());
                         finalString = finalString + "The item does not exist in the library " + getServername() + "\n";
                     }
-            }
+                }
 
+            } else {
+                if (itemID.substring(0, 3).equals("CON")) {
+                    System.out.println("I want to go to Concordia to borrow my book");
+                    System.out.println("UDP for calling the correct server on the client's behalf");
+                    String i = "F" + ";" + userID + "#" + itemID + "$" + Integer.toString(numberOfDays) + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+                    byte[] b = (i + "").getBytes();
+                    System.out.println(i);
+                    InetAddress ia = InetAddress.getLocalHost();
+                    this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                    try {
+                        System.out.println("I am trying to send the request");
+                        this.ds.send(dps);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    finalString = finalString + "The call to the remote server has been made \n";
+                    synchronized (lock) {
+                        try {
+                            lock.wait(10000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("");
+                        System.out.println("I am in " + getServername());
+                        System.out.println("This is inside the method:" + this.globalString);
+                        finalString = finalString + this.globalString;
+                        this.globalString = "";
+
+                    }
+                    //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+                } else if (itemID.substring(0, 3).equals("MCG")) {
+                    System.out.println("I want to go to Mcgill to borrow my book");
+                    System.out.println("UDP for calling the correct server on the client's behalf");
+                    String i = "F" + ";" + userID + "#" + itemID + "$" + Integer.toString(numberOfDays) + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8082);
+                    byte[] b = (i + "").getBytes();
+                    System.out.println(i);
+                    InetAddress ia = InetAddress.getLocalHost();
+                    this.dps = new DatagramPacket(b, b.length, ia, 9999);
+
+                    try {
+                        this.ds.send(dps);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    finalString = finalString + "The call to the remote server has been made \n";
+                    synchronized (lock) {
+                        try {
+                            lock.wait(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("");
+                        System.out.println("I am in " + getServername());
+                        System.out.println("This is inside the method:" + this.globalString);
+                        finalString = finalString + this.globalString;
+                        this.globalString = "";
+
+
+                    }
+                    //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+                }else if(itemID.substring(0, 3).equals("MON"))
+                {
+                    {
+                        System.out.println("I want to go to Concordia to borrow my book");
+                        System.out.println("UDP for calling the correct server on the client's behalf");
+                        String i = "F" + ";" + userID + "#" + itemID + "$" + Integer.toString(numberOfDays) + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8083);
+                        byte[] b = (i + "").getBytes();
+                        System.out.println(i);
+                        InetAddress ia = InetAddress.getLocalHost();
+                        this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                        try {
+                            System.out.println("I am trying to send the request");
+                            this.ds.send(dps);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        finalString = finalString + "The call to the remote server has been made \n";
+                        synchronized (lock) {
+                            try {
+                                lock.wait(10000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println("");
+                            System.out.println("I am in " + getServername());
+                            System.out.println("This is inside the method:" + this.globalString);
+                            finalString = finalString + this.globalString;
+                            this.globalString = "";
+
+                        }
+                        //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+                    }
+
+                }else {
+                    return "There is no suitable server for this item.";
+                }
+            }
         } else {
-            System.out.println("UDP for calling the correct server on the client's behalf");
-            finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+            System.out.println("The User is not authorized for this action");
+            return ("The User is not authorized for this action");
         }
-    } else {
-        System.out.println("The User is not authorized for this action");
-        return ("The User is not authorized for this action");
-    }
         return finalString;
 
-}
+    }
 
-    public String findItem(String userID, String itemName) {
+    public String findItem(String userID, String itemName) throws UnknownHostException {
         String finalString = "Items matching your entry at " + getServername() + " are:\n";
         if (userID.substring(3, 4).equals("U")) {
             Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
@@ -496,11 +612,104 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 }
             }
             System.out.println("Send a UDP call to other servers for this and list down their items");
+            {
+                if (this.universalPort != 8081) {
+                    System.out.println("UDP for calling the correct server on the client's behalf to 8081");
+                    String i = "X" + ";" + userID + "#" + itemName + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+                    byte[] b = (i + "").getBytes();
+                    InetAddress ia = InetAddress.getLocalHost();
+                    this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                    try {
+                        this.ds.send(dps);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    finalString = finalString + "The call to the remote server has been made \n";
+                    synchronized (lock) {
+                        try {
+                            lock.wait(10000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("");
+                        System.out.println("I am in " + getServername());
+                        System.out.println("This is inside the method:" + this.globalString);
+                        finalString = finalString + this.globalString;
+                        System.out.println("Here inside the end of the first call: " + finalString);
+
+                    }
+                }
+                if (this.universalPort != 8082) {
+                    //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+                    System.out.println("UDP for calling the correct server on the client's behalf to 8082");
+                    String i1 = "Y" + ";" + userID + "#" + itemName + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8082);
+                    System.out.println(i1);
+                    byte[] b1 = (i1 + "").getBytes();
+                    InetAddress ia1 = InetAddress.getLocalHost();
+                    this.dps = new DatagramPacket(b1, b1.length, ia1, 9999);
+                    try {
+                        this.ds.send(dps);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    finalString = finalString + "The call to the remote server has been made \n";
+                    synchronized (lock) {
+                        try {
+                            lock.wait(10000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("");
+                        System.out.println("I am in " + getServername());
+                        System.out.println("This is inside the method:" + this.globalString);
+                        finalString = finalString + this.globalString;
+                        System.out.println("Here inside the end of the second call: " + finalString);
+
+
+                    }
+                }
+                if(this.universalPort != 8083)
+                {
+                    {
+                        //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+                        System.out.println("UDP for calling the correct server on the client's behalf to 8083");
+                        String i1 = "Y" + ";" + userID + "#" + itemName + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8083);
+                        System.out.println(i1);
+                        byte[] b1 = (i1 + "").getBytes();
+                        InetAddress ia1 = InetAddress.getLocalHost();
+                        this.dps = new DatagramPacket(b1, b1.length, ia1, 9999);
+                        try {
+                            this.ds.send(dps);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        finalString = finalString + "The call to the remote server has been made \n";
+                        synchronized (lock) {
+                            try {
+                                lock.wait(10000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println("");
+                            System.out.println("I am in " + getServername());
+                            System.out.println("This is inside the method:" + this.globalString);
+                            finalString = finalString + this.globalString;
+                            System.out.println("Here inside the end of the second call: " + finalString);
+
+
+                        }
+                    }
+
+                }
+                //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+            }
+
         } else {
             System.out.println("The User is not authorized for this action");
             return ("The User is not authorized for this action");
 
         }
+        System.out.println(finalString);
         return finalString;
 
     }
@@ -556,7 +765,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     }
                 } else {
                     if (getSyncHeap().containsKey(itemID)) {
-                            return "The record for this item is currently being used by another user\n";
+                        return "The record for this item is currently being used by another user\n";
                     } else {
                         return "This book ID does not exist in the library " + getServername();
                     }
@@ -564,9 +773,8 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             } else {
                 System.out.println("Make a appropriate UDP call for the inter server item list update");
             }
-        }
-        else {
-                finalString = finalString + "The User is not authorized for this action\n";
+        } else {
+            finalString = finalString + "The User is not authorized for this action\n";
         }
         System.out.println("I am in the end");
         System.out.println(finalString);
@@ -577,7 +785,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     public String verify(String ID) {
         String finalString = "";
         System.out.println("*************************************************************************");
-        System.out.println("Verifying the connection at "+getServername()+" Library.");
+        System.out.println("Verifying the connection at " + getServername() + " Library.");
         if (getServername().substring(0, 3).equals(ID.substring(0, 3))) {
             System.out.println("The ID is connected to right server");
             finalString = finalString + "The ID is connected to right server.\n";
@@ -710,45 +918,312 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         }
     }
 
-    public String addToWait(String parm, String itemID, String userID)
-    {
-        if(parm.equals("Y"))
-        {
-            if(getWaitlistRec().containsKey(itemID))
-            {
+    public String addToWait(String parm, String itemID, String userID) {
+        if (parm.equals("Y")) {
+            if (getWaitlistRec().containsKey(itemID)) {
                 ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
-                if(waitHolder.contains(userID))
-                {
+                if (waitHolder.contains(userID)) {
                     return ("You are already in the waitlist for this item");
-                }
-                else
-                {
+                } else {
                     getWaitlistRec().remove(itemID);
                     waitHolder.add(userID);
-                    getWaitlistRec().put(itemID,waitHolder);
-                    return ("You have been sucessfully waitlisted for the item "+ itemID);
+                    getWaitlistRec().put(itemID, waitHolder);
+                    return ("You have been sucessfully waitlisted for the item " + itemID);
                 }
-            }
-            else
-            {
-                ArrayList<String> waitHolder = new ArrayList<String> ();
+            } else {
+                ArrayList<String> waitHolder = new ArrayList<String>();
                 ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
                 waitHolder.add(userID);
-                getWaitlistRec().put(bRecHolder.get(0),waitHolder);
-                return ("You have been sucessfully waitlisted for the item "+ itemID);
+                getWaitlistRec().put(bRecHolder.get(0), waitHolder);
+                return ("You have been sucessfully waitlisted for the item " + itemID);
 
             }
-        }
-        else{
+        } else {
             return ("Invalid response");
         }
     }
 
-    public void interServerInteractor() throws SocketException {
-        this.ds = new DatagramSocket();
+    public void interServerInteractor() throws IOException {
+        if (this.getServername().equals("CONCORDIA")) {
+            byte[] b1 = null;
+            b1 = new byte[1024];
+            this.dpr = new DatagramPacket(b1, b1.length);
+            System.out.println("I am open for listen");
+            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8081);
+            ds1.bind(address);
+            this.ds1.receive(dpr);
+            System.out.println("I am in " + getServername());
+            String result = null;
+            result = new String(dpr.getData());
+            System.out.println(result);
+            System.out.println(result.charAt(0));
+            if (result.startsWith("F")) {
+                System.out.println("Find the appropriate method to be called and call that using a dummy variable");
 
+                System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                result = result.trim();
+                String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+
+                String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
+                byte[] b = (rece + "").getBytes();
+                InetAddress ia = null;
+                try {
+                    ia = InetAddress.getLocalHost();
+                    this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                    //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                    System.out.println("I am sending the packet");
+                    this.ds.send(this.dps);
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                if (result.startsWith("B")) {
+                    result = result.trim();
+                    String temp1 = result.substring(2, result.indexOf('@'));
+                    this.globalString = temp1;
+                    System.out.println("At the end " + this.globalString);
+
+                } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
+                    System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                    System.out.println(result);
+                    System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                    result = result.trim();
+                    String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                    String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
+                    String finalString = "Items matching your entry at " + getServername() + " are:\n";
+                    if (vuserID.substring(3, 4).equals("U")) {
+                        Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
+                        for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
+                            ArrayList<String> valueHolder = entry.getValue();
+                            if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
+                                finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
+                            }
+                        }
+
+                        String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                } else if (result.startsWith("P") || result.startsWith("Q") || result.startsWith("R")) {
+                    result = result.trim();
+                    String temp1 = result.substring(2, result.indexOf('@'));
+                    this.globalString = temp1;
+                    System.out.println("At the end " + this.globalString);
+                }
+            }
+        }
+        if (this.getServername().equals("MCGILL")) {
+            byte[] b1 = null;
+            b1 = new byte[1024];
+            this.dpr = new DatagramPacket(b1, b1.length);
+            System.out.println("I am open for listen");
+            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8082);
+            ds1.bind(address);
+            this.ds1.receive(dpr);
+            System.out.println("I am in " + getServername());
+            String result = null;
+            result = new String(dpr.getData());
+            result = result.trim();
+            System.out.println(result);
+            System.out.println(result.charAt(0));
+            if (result.startsWith("F")) {
+                System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                result = result.trim();
+                String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+
+                String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
+                System.out.println("The found matches on this server "+rece);
+                byte[] b = (rece + "").getBytes();
+                InetAddress ia = null;
+                try {
+                    ia = InetAddress.getLocalHost();
+                    this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                    //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                    System.out.println("I am sending the packet");
+                    this.ds.send(this.dps);
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                if (result.startsWith("B")) {
+                    result = result.trim();
+                    String temp1 = result.substring(2, result.indexOf('@'));
+                    this.globalString = temp1;
+                    System.out.println("At the end " + this.globalString);
+
+                } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
+                    System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                    System.out.println(result);
+                    System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                    result = result.trim();
+                    String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                    String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
+                    String finalString = "Items matching your entry at " + getServername() + " are:\n";
+                    if (vuserID.substring(3, 4).equals("U")) {
+                        Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
+                        for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
+                            ArrayList<String> valueHolder = entry.getValue();
+                            if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
+                                finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
+                            }
+                        }
+                        System.out.println(finalString);
+                        String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
+                        System.out.println(rece);
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                } else if (result.startsWith("P") || result.startsWith("Q") || result.startsWith("R")) {
+                    result = result.trim();
+                    String temp1 = result.substring(2, result.indexOf('@'));
+                    this.globalString = temp1;
+                    System.out.println("At the end " + this.globalString);
+                }
+
+            }
+        }
+        if(this.getServername().equals("MONTREALU"))
+        {
+            {
+                byte[] b1 = null;
+                b1 = new byte[1024];
+                this.dpr = new DatagramPacket(b1, b1.length);
+                System.out.println("I am open for listen");
+                InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), 8083);
+                ds1.bind(address);
+                this.ds1.receive(dpr);
+                System.out.println("I am in " + getServername());
+                String result = null;
+                result = new String(dpr.getData());
+                result = result.trim();
+                System.out.println(result);
+                System.out.println(result.charAt(0));
+                if (result.startsWith("F")) {
+                    System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                    System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                    result = result.trim();
+                    String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                    String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                    int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                    String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+
+                    String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
+                    System.out.println("The found matches on this server "+rece);
+                    byte[] b = (rece + "").getBytes();
+                    InetAddress ia = null;
+                    try {
+                        ia = InetAddress.getLocalHost();
+                        this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                        //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                        System.out.println("I am sending the packet");
+                        this.ds.send(this.dps);
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    if (result.startsWith("B")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+
+                    } else if ((result.startsWith("X")) || (result.startsWith("Y")) || (result.startsWith("Z"))) {
+                        System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                        System.out.println(result);
+                        System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("@"));
+                        String finalString = "Items matching your entry at " + getServername() + " are:\n";
+                        if (vuserID.substring(3, 4).equals("U")) {
+                            Set<Map.Entry<String, ArrayList<String>>> tempSet = getLibBooksRec().entrySet();
+                            for (Map.Entry<String, ArrayList<String>> entry : tempSet) {
+                                ArrayList<String> valueHolder = entry.getValue();
+                                if (valueHolder.get(0).matches(".*" + vitemName + "*.") && (valueHolder.get(1) != "0")) {
+                                    finalString = finalString + "Code: " + entry.getKey() + ", Name: " + valueHolder.get(0) + ", Availability: " + valueHolder.get(1) + "\n";
+                                }
+                            }
+                            System.out.println(finalString);
+                            String rece = "P" + ";" + finalString + result.substring(result.indexOf("@"));
+                            System.out.println(rece);
+                            byte[] b = (rece + "").getBytes();
+                            InetAddress ia = null;
+                            try {
+                                ia = InetAddress.getLocalHost();
+                                this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                                //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                                System.out.println("I am sending the packet");
+                                this.ds.send(this.dps);
+                            } catch (UnknownHostException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+
+                        }
+                    } else if (result.startsWith("P") || result.startsWith("Q") || result.startsWith("R")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+                    }
+
+                }
+            }
+        }
 
     }
-
-
+    @Override
+    public void run() {
+        try {
+            while(true) {
+                this.interServerInteractor();
+                t.stop();
+                t.start();
+                this.globalString = "";
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
