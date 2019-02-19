@@ -140,6 +140,8 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             tempHash1.put("CON9001", new ArrayList<String>(Arrays.asList("Avada Kedavra", "0")));
             tempHash1.put("CON9002", new ArrayList<String>(Arrays.asList("Seldfnv", "0")));
             tempHash1.put("CON9009", new ArrayList<String>(Arrays.asList("Sectumsempra", "10")));
+            tempHash1.put("CON1000", new ArrayList<String>(Arrays.asList("Star Wars", "10")));
+            tempHash1.put("CON1001", new ArrayList<String>(Arrays.asList("Tombstone", "8")));
 
 
             HashMap<String, ArrayList<String>> tempHash2 = new HashMap<String, ArrayList<String>>();
