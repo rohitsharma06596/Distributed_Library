@@ -1444,6 +1444,91 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         System.out.println("At the end " + this.globalString);
                         appendStrToFile("At the end " + this.globalString);
                     }
+                    else if(result.startsWith("E"))
+                    {
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                        //int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                        boolean parm = this.itemAvailabilityCheck(vitemID);
+                        String rece = null;
+                        if(parm == true) {
+                            System.out.println(" The item is available");
+                            appendStrToFile(" The item is available \n");
+                            rece = "G" + ";" + "TRUE" + result.substring(result.indexOf("@"));
+                        }
+                        else
+                        {
+                            System.out.println(" The item is not available");
+                            appendStrToFile(" The item is not available \n");
+                            rece = "G" + ";" + "FALSE" + result.substring(result.indexOf("@"));
+
+                        }
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            appendStrToFile("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else if (result.startsWith("G")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+                        appendStrToFile("At the end " + this.globalString);
+                    }
+                    else if(result.startsWith("J"))
+                    {
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                        //int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                        boolean parm = this.itemBorrowedCheck(vuserID, vitemID);
+                        String rece = null;
+                        if(parm == true) {
+                            System.out.println(" The item is available");
+                            appendStrToFile(" The item is available \n");
+                            rece = "K" + ";" + "TRUE" + result.substring(result.indexOf("@"));
+                        }
+                        else
+                        {
+                            System.out.println(" The item is not available");
+                            appendStrToFile(" The item is not available \n");
+                            rece = "K" + ";" + "FALSE" + result.substring(result.indexOf("@"));
+
+                        }
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            appendStrToFile("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else if (result.startsWith("K")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+                        appendStrToFile("At the end " + this.globalString);
+                    }
+
 
                 }
             }
@@ -1585,6 +1670,89 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                     }
                     else if (result.startsWith("S") || result.startsWith("T") || result.startsWith("U")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+                        appendStrToFile("At the end " + this.globalString);
+                    }
+                    else if(result.startsWith("E"))
+                    {
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                        //int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                        boolean parm = this.itemAvailabilityCheck(vitemID);
+                        String rece = null;
+                        if(parm == true) {
+                            System.out.println(" The item is available");
+                            appendStrToFile(" The item is available \n");
+                            rece = "G" + ";" + "TRUE" + result.substring(result.indexOf("@"));
+                        }
+                        else
+                        {
+                            System.out.println(" The item is not available");
+                            appendStrToFile(" The item is not available \n");
+                            rece = "G" + ";" + "FALSE" + result.substring(result.indexOf("@"));
+
+                        }
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            appendStrToFile("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else if (result.startsWith("G")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+                        appendStrToFile("At the end " + this.globalString);
+                    }else if(result.startsWith("J"))
+                    {
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                        //int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                        boolean parm = this.itemBorrowedCheck(vuserID, vitemID);
+                        String rece = null;
+                        if(parm == true) {
+                            System.out.println(" The item is available");
+                            appendStrToFile(" The item is available \n");
+                            rece = "K" + ";" + "TRUE" + result.substring(result.indexOf("@"));
+                        }
+                        else
+                        {
+                            System.out.println(" The item is not available");
+                            appendStrToFile(" The item is not available \n");
+                            rece = "K" + ";" + "FALSE" + result.substring(result.indexOf("@"));
+
+                        }
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            appendStrToFile("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else if (result.startsWith("K")) {
                         result = result.trim();
                         String temp1 = result.substring(2, result.indexOf('@'));
                         this.globalString = temp1;
@@ -1741,6 +1909,90 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             System.out.println("At the end " + this.globalString);
                             appendStrToFile("At the end " + this.globalString);
                         }
+                        else if(result.startsWith("E"))
+                        {
+                            result = result.trim();
+                            String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                            String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                            //int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                            boolean parm = this.itemAvailabilityCheck(vitemID);
+                            String rece = null;
+                            if(parm == true) {
+                                System.out.println(" The item is available");
+                                appendStrToFile(" The item is available \n");
+                                rece = "G" + ";" + "TRUE" + result.substring(result.indexOf("@"));
+                            }
+                            else
+                            {
+                                System.out.println(" The item is not available");
+                                appendStrToFile(" The item is not available \n");
+                                rece = "G" + ";" + "FALSE" + result.substring(result.indexOf("@"));
+
+                            }
+                            byte[] b = (rece + "").getBytes();
+                            InetAddress ia = null;
+                            try {
+                                ia = InetAddress.getLocalHost();
+                                this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                                //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                                System.out.println("I am sending the packet");
+                                appendStrToFile("I am sending the packet");
+                                this.ds.send(this.dps);
+                            } catch (UnknownHostException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        else if (result.startsWith("G")) {
+                            result = result.trim();
+                            String temp1 = result.substring(2, result.indexOf('@'));
+                            this.globalString = temp1;
+                            System.out.println("At the end " + this.globalString);
+                            appendStrToFile("At the end " + this.globalString);
+                        }
+                        else if(result.startsWith("J"))
+                        {
+                            result = result.trim();
+                            String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                            String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                            //int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
+                            boolean parm = this.itemBorrowedCheck(vuserID, vitemID);
+                            String rece = null;
+                            if(parm == true) {
+                                System.out.println(" The item is available");
+                                appendStrToFile(" The item is available \n");
+                                rece = "K" + ";" + "TRUE" + result.substring(result.indexOf("@"));
+                            }
+                            else
+                            {
+                                System.out.println(" The item is not available");
+                                appendStrToFile(" The item is not available \n");
+                                rece = "K" + ";" + "FALSE" + result.substring(result.indexOf("@"));
+
+                            }
+                            byte[] b = (rece + "").getBytes();
+                            InetAddress ia = null;
+                            try {
+                                ia = InetAddress.getLocalHost();
+                                this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                                //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                                System.out.println("I am sending the packet");
+                                appendStrToFile("I am sending the packet");
+                                this.ds.send(this.dps);
+                            } catch (UnknownHostException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        else if (result.startsWith("K")) {
+                            result = result.trim();
+                            String temp1 = result.substring(2, result.indexOf('@'));
+                            this.globalString = temp1;
+                            System.out.println("At the end " + this.globalString);
+                            appendStrToFile("At the end " + this.globalString);
+                        }
 
                     }
                 }
@@ -1764,15 +2016,144 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         }
         else if (itemID.substring(0, 3).equals("CON"))
         {
-
+            System.out.println("I want to go to Concordia to verify the borrow of the book for the requested user");
+            appendStrToFile("I want to go to Concordia to verify the borrow of the book for the requested user\n");
+            System.out.println("UDP for calling the correct server on the client's behalf");
+            appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+            String i = "J" + ";"+ userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            byte[] b = (i + "").getBytes();
+            System.out.println(i);
+            InetAddress ia = null;
+            try {
+                ia = InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+            try {
+                System.out.println("I am trying to send return the request");
+                appendStrToFile("I am trying to send the return request\n");
+                this.ds.send(dps);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println( "The call to the remote server has been made \n");
+            appendStrToFile("The call to the remote server has been made \n");
+            synchronized (lock) {
+                try {
+                    lock.wait(1000000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("");
+                System.out.println("I am in " + getServername());
+                appendStrToFile("I am in " + getServername()+"\n");
+                System.out.println("This is inside the method:" + this.globalString);
+                if(this.globalString.contains("TRUE")) {
+                    this.globalString = null;
+                    return true;
+                }
+                else if (this.globalString.contains("FALSE")) {
+                    this.globalString = null;
+                    return false;
+                }
+                //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+            }
+            //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
         }
         else if (itemID.substring(0, 3).equals("MCG"))
         {
-
+            System.out.println("I want to go to Mcgill to verify the borrow of the book for the requested user");
+            appendStrToFile("I want to go to Mcgill to verify the borrow of the book for the requested user\n");
+            System.out.println("UDP for calling the correct server on the client's behalf");
+            appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+            String i = "J" + ";"+ userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            byte[] b = (i + "").getBytes();
+            System.out.println(i);
+            InetAddress ia = null;
+            try {
+                ia = InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+            try {
+                System.out.println("I am trying to send return the request");
+                appendStrToFile("I am trying to send the return request\n");
+                this.ds.send(dps);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println( "The call to the remote server has been made \n");
+            appendStrToFile("The call to the remote server has been made \n");
+            synchronized (lock) {
+                try {
+                    lock.wait(1000000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("");
+                System.out.println("I am in " + getServername());
+                appendStrToFile("I am in " + getServername()+"\n");
+                System.out.println("This is inside the method:" + this.globalString);
+                if(this.globalString.contains("TRUE")) {
+                    this.globalString = null;
+                    return true;
+                }
+                else if (this.globalString.contains("FALSE")) {
+                    this.globalString = null;
+                    return false;
+                }
+                //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+            }
+            //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
         }
         else if (itemID.substring(0, 3).equals("MON"))
         {
-
+            System.out.println("I want to go to MonrealU to verify the borrow of the book for the requested user");
+            appendStrToFile("I want to go to MontrealU to verify the borrow of the book for the requested user");
+            System.out.println("UDP for calling the correct server on the client's behalf");
+            appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+            String i = "J" + ";"+ userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            byte[] b = (i + "").getBytes();
+            System.out.println(i);
+            InetAddress ia = null;
+            try {
+                ia = InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+            try {
+                System.out.println("I am trying to send return the request");
+                appendStrToFile("I am trying to send the return request\n");
+                this.ds.send(dps);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println( "The call to the remote server has been made \n");
+            appendStrToFile("The call to the remote server has been made \n");
+            synchronized (lock) {
+                try {
+                    lock.wait(1000000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("");
+                System.out.println("I am in " + getServername());
+                appendStrToFile("I am in " + getServername()+"\n");
+                System.out.println("This is inside the method:" + this.globalString);
+                if(this.globalString.contains("TRUE")) {
+                    this.globalString = null;
+                    return true;
+                }
+                else if (this.globalString.contains("FALSE")) {
+                    this.globalString = null;
+                    return false;
+                }
+                //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+            }
+            //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
         }
         return false;
 
@@ -1790,16 +2171,149 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         }
         else if (itemID.substring(0, 3).equals("CON"))
         {
-
+            System.out.println("I want to go to Concordia to check the availability of the book");
+            appendStrToFile("I want to go to Concordia to check the availability of the book\n");
+            System.out.println("UDP for calling the correct server on the client's behalf");
+            appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+            String i = "E" + ";" + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            byte[] b = (i + "").getBytes();
+            System.out.println(i);
+            InetAddress ia = null;
+            try {
+                ia = InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+            try {
+                System.out.println("I am trying to send return the request");
+                appendStrToFile("I am trying to send the return request\n");
+                this.ds.send(dps);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println( "The call to the remote server has been made \n");
+            appendStrToFile("The call to the remote server has been made \n");
+            synchronized (lock) {
+                try {
+                    lock.wait(1000000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("");
+                System.out.println("I am in " + getServername());
+                appendStrToFile("I am in " + getServername()+"\n");
+                System.out.println("This is inside the method:" + this.globalString);
+                if(this.globalString.contains("TRUE")) {
+                    this.globalString = null;
+                    return true;
+                }
+                else if (this.globalString.contains("FALSE")) {
+                    this.globalString = null;
+                    return false;
+                }
+                //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+            }
+            //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
         }
+
+
         else if (itemID.substring(0, 3).equals("MCG"))
-        {
-
+        {System.out.println("I want to go to Mcgill to check the availability of the book");
+            appendStrToFile("I want to go to Mcgill to check the availability of the book\n");
+            System.out.println("UDP for calling the correct server on the client's behalf");
+            appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+            String i = "E" + ";" + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            byte[] b = (i + "").getBytes();
+            System.out.println(i);
+            InetAddress ia = null;
+            try {
+                ia = InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+            try {
+                System.out.println("I am trying to send return the request");
+                appendStrToFile("I am trying to send the return request\n");
+                this.ds.send(dps);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println( "The call to the remote server has been made \n");
+            appendStrToFile("The call to the remote server has been made \n");
+            synchronized (lock) {
+                try {
+                    lock.wait(1000000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("");
+                System.out.println("I am in " + getServername());
+                appendStrToFile("I am in " + getServername()+"\n");
+                System.out.println("This is inside the method:" + this.globalString);
+                if(this.globalString.contains("TRUE")) {
+                    this.globalString = null;
+                    return true;
+            }
+                else if (this.globalString.contains("FALSE")) {
+                    this.globalString = null;
+                    return false;
+                }
+            //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
         }
+            //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+        }
+
         else if (itemID.substring(0, 3).equals("MON"))
         {
-
+            System.out.println("I want to go to MontrealU to check the availability of the book");
+            appendStrToFile("I want to go to MontrealU to check the availability of the book\n");
+            System.out.println("UDP for calling the correct server on the client's behalf");
+            appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+            String i = "E" + ";" + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            byte[] b = (i + "").getBytes();
+            System.out.println(i);
+            InetAddress ia = null;
+            try {
+                ia = InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+            try {
+                System.out.println("I am trying to send return the request");
+                appendStrToFile("I am trying to send the return request\n");
+                this.ds.send(dps);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println( "The call to the remote server has been made \n");
+            appendStrToFile("The call to the remote server has been made \n");
+            synchronized (lock) {
+                try {
+                    lock.wait(1000000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("");
+                System.out.println("I am in " + getServername());
+                appendStrToFile("I am in " + getServername()+"\n");
+                System.out.println("This is inside the method:" + this.globalString);
+                if(this.globalString.contains("TRUE")) {
+                    this.globalString = null;
+                    return true;
+                }
+                else if (this.globalString.contains("FALSE")) {
+                    this.globalString = null;
+                    return false;
+                }
+                //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+            }
+            //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
         }
+
+
         return false;
 
 
