@@ -604,7 +604,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     appendStrToFile(finalString);
                     synchronized (lock) {
                         try {
-                            lock.wait(10000);
+                            lock.wait(100);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -675,7 +675,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         appendStrToFile(finalString);
                         synchronized (lock) {
                             try {
-                                lock.wait(10000);
+                                lock.wait(100);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -748,7 +748,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     appendStrToFile(finalString);
                     synchronized (lock) {
                         try {
-                            lock.wait(10000);
+                            lock.wait(100);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -781,7 +781,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     appendStrToFile(finalString);
                     synchronized (lock) {
                         try {
-                            lock.wait(10000);
+                            lock.wait(100);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -818,7 +818,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         appendStrToFile(finalString);
                         synchronized (lock) {
                             try {
-                                lock.wait(10000);
+                                lock.wait(100);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -944,7 +944,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         appendStrToFile(finalString);
                         synchronized (lock) {
                             try {
-                                lock.wait(10000);
+                                lock.wait(100);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -1025,7 +1025,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             appendStrToFile(finalString);
                             synchronized (lock) {
                                 try {
-                                    lock.wait(10000);
+                                    lock.wait(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -2041,7 +2041,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("The call to the remote server has been made \n");
             synchronized (lock) {
                 try {
-                    lock.wait(1000000);
+                    lock.wait(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -2067,7 +2067,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("I want to go to Mcgill to verify the borrow of the book for the requested user\n");
             System.out.println("UDP for calling the correct server on the client's behalf");
             appendStrToFile("UDP for calling the correct server on the client's behalf\n");
-            String i = "J" + ";"+ userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            String i = "J" + ";"+ userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8082);
             byte[] b = (i + "").getBytes();
             System.out.println(i);
             InetAddress ia = null;
@@ -2088,7 +2088,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("The call to the remote server has been made \n");
             synchronized (lock) {
                 try {
-                    lock.wait(1000000);
+                    lock.wait(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -2114,7 +2114,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("I want to go to MontrealU to verify the borrow of the book for the requested user");
             System.out.println("UDP for calling the correct server on the client's behalf");
             appendStrToFile("UDP for calling the correct server on the client's behalf\n");
-            String i = "J" + ";"+ userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            String i = "J" + ";"+ userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8083);
             byte[] b = (i + "").getBytes();
             System.out.println(i);
             InetAddress ia = null;
@@ -2135,7 +2135,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("The call to the remote server has been made \n");
             synchronized (lock) {
                 try {
-                    lock.wait(1000000);
+                    lock.wait(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -2196,7 +2196,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("The call to the remote server has been made \n");
             synchronized (lock) {
                 try {
-                    lock.wait(1000000);
+                    lock.wait(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -2205,10 +2205,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 appendStrToFile("I am in " + getServername()+"\n");
                 System.out.println("This is inside the method:" + this.globalString);
                 if(this.globalString.contains("TRUE")) {
+                    System.out.println("I am in the availability true check of Concordia");
                     this.globalString = null;
                     return true;
                 }
                 else if (this.globalString.contains("FALSE")) {
+                    System.out.println("I am in the availability true check of Concordia");
                     this.globalString = null;
                     return false;
                 }
@@ -2223,7 +2225,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("I want to go to Mcgill to check the availability of the book\n");
             System.out.println("UDP for calling the correct server on the client's behalf");
             appendStrToFile("UDP for calling the correct server on the client's behalf\n");
-            String i = "E" + ";" + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            String i = "E" + ";" + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8082);
             byte[] b = (i + "").getBytes();
             System.out.println(i);
             InetAddress ia = null;
@@ -2244,7 +2246,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("The call to the remote server has been made \n");
             synchronized (lock) {
                 try {
-                    lock.wait(1000000);
+                    lock.wait(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -2253,10 +2255,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 appendStrToFile("I am in " + getServername()+"\n");
                 System.out.println("This is inside the method:" + this.globalString);
                 if(this.globalString.contains("TRUE")) {
+                    System.out.println("I am in the availability true check of Mcgill");
                     this.globalString = null;
                     return true;
             }
                 else if (this.globalString.contains("FALSE")) {
+                    System.out.println("I am in the availability false check of Mcgill");
                     this.globalString = null;
                     return false;
                 }
@@ -2271,7 +2275,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("I want to go to MontrealU to check the availability of the book\n");
             System.out.println("UDP for calling the correct server on the client's behalf");
             appendStrToFile("UDP for calling the correct server on the client's behalf\n");
-            String i = "E" + ";" + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+            String i = "E" + ";" + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8083);
             byte[] b = (i + "").getBytes();
             System.out.println(i);
             InetAddress ia = null;
@@ -2292,7 +2296,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             appendStrToFile("The call to the remote server has been made \n");
             synchronized (lock) {
                 try {
-                    lock.wait(1000000);
+                    lock.wait(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -2301,10 +2305,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 appendStrToFile("I am in " + getServername()+"\n");
                 System.out.println("This is inside the method:" + this.globalString);
                 if(this.globalString.contains("TRUE")) {
+                    System.out.println("I am in the availability true check of Montreal");
                     this.globalString = null;
                     return true;
                 }
                 else if (this.globalString.contains("FALSE")) {
+                    System.out.println("I am in the availability true check of Montreal");
                     this.globalString = null;
                     return false;
                 }
