@@ -28,6 +28,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     private Thread t;
     private final Object lock = new Object();
     private int universalPort;
+    private static ArrayList interLibraryBlockUsers;
 
 
     public HashMap<String, ArrayList<String>> getUserUpdateMessages() {
@@ -146,13 +147,13 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
             HashMap<String, ArrayList<String>> tempHash2 = new HashMap<String, ArrayList<String>>();
 
-            tempHash2.put("CON9001", new ArrayList<String>(Arrays.asList("CONU5000", "CONU6000")));
             tempHash2.put("CON9002", new ArrayList<String>(Arrays.asList("CONU7000", "CONU8000")));
 
             xLib.setLibLendingRec(tempStore);
             xLib.setLibBooksRec(tempHash1);
             xLib.setWaitlistRec(tempHash2);
             xLib.universalPort = 8081;
+            this.interLibraryBlockUsers = new ArrayList<String>();
 
         } else if (xLib.getServername().equals("MCGILL")) {
             try {
@@ -187,6 +188,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             xLib.setLibBooksRec(tempHash1);
             xLib.setWaitlistRec(tempHash2);
             xLib.universalPort = 8082;
+            this.interLibraryBlockUsers = new ArrayList<String>();
 
         } else if (xLib.getServername().equals("MONTREALU")) {
             try {
@@ -222,6 +224,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             xLib.setLibBooksRec(tempHash1);
             xLib.setWaitlistRec(tempHash2);
             xLib.universalPort = 8083;
+            this.interLibraryBlockUsers = new ArrayList<String>();
 
         } else {
             System.out.println("Server is invalid");
@@ -328,7 +331,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 appendStrToFile("The record for this item is currently being used by another user please try after sometime\n");
                 return ("The record for this item is currently being used by another user please try after sometime\n");
             } else {
-                getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemID, Integer.toString(quantity))));
+                getLibBooksRec().put(itemID, new ArrayList<String>(Arrays.asList(itemName, Integer.toString(quantity))));
                 System.out.println("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
                 appendStrToFile("his item was not listed in the library a new entry has been made for this with the provided q\n");
                 return ("This item was not listed in the library a new entry has been made for this with the provided quantity\n");
@@ -377,6 +380,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     msg = "";
                 }
                 ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
+                System.out.println(waitHolder);
                 for (int iter = 0; iter < waitHolder.size(); iter++) {
                     this.updateMessageHash("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list", waitHolder.get(iter));
                     appendStrToFile("The manager of the item has removed the item: " + itemID + ". Hence you have been removed from the waiting list"+ waitHolder.get(iter));
@@ -499,13 +503,16 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         appendStrToFile("I am inside the lending condition\n");
                         ArrayList<String> lendHolder = (ArrayList<String>) getLendingDetail(itemID);
                         getLibLendingRec().remove(itemID);
-                        if (bRecHolder.get(1) != "0") {
+                        if (lendHolder.contains(userID)) {
+                            getLibLendingRec().put(itemID, lendHolder);
+                            getLibBooksRec().put(itemID, bRecHolder);
+                            getSyncHeap().remove(itemID);
+                            appendStrToFile("You already have a copy of this item");
+                            return "You already have a copy of this item";
+                        }
+                        if (Integer.parseInt(bRecHolder.get(1)) > 0) {
                             if (lendHolder.contains(userID)) {
-                                getLibLendingRec().put(itemID, lendHolder);
-                                getLibBooksRec().put(itemID, bRecHolder);
-                                getSyncHeap().remove(itemID);
-                                appendStrToFile("You already have a copy of this item");
-                                return "You already have a copy of this item";
+
                             } else {
                                 lendHolder.add(userID);
                                 getLibLendingRec().put(itemID, lendHolder);
@@ -519,7 +526,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                                 getSyncHeap().remove(itemID, userID);
                             }
                         } else {
-                            if (bRecHolder.get(1) == "0") {
+                            if (Integer.parseInt(bRecHolder.get(1)) <= 0) {
                                 getLibLendingRec().put(itemID, lendHolder);
                                 getLibBooksRec().put(itemID, bRecHolder);
                                 getSyncHeap().remove(itemID, userID);
@@ -536,7 +543,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             }
                         }
                     } else {
-                        if (bRecHolder.get(1) != "0") {
+                        if (Integer.parseInt(bRecHolder.get(1)) > 0) {
                             ArrayList<String> lendHolder = new ArrayList<String>();
                             System.out.println(bRecHolder);
                             lendHolder.add(bRecHolder.get(0));
@@ -553,7 +560,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         } else {
                             getLibBooksRec().put(itemID, bRecHolder);
                             getSyncHeap().remove(itemID, userID);
-                            if (bRecHolder.get(1) == "0") {
+                            if (Integer.parseInt(bRecHolder.get(1)) <= 0) {
                                 finalString = finalString + ("The item is currently not available\n");
                                 finalString = finalString + ("Would you like to be added to the waitlist?");
                                 finalString = finalString + ("Enter Y for Yes and N for No");
@@ -576,7 +583,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 }
 
             } else {
-                if (itemID.substring(0, 3).equals("CON")) {
+                if (itemID.substring(0, 3).equals("CON") && !(interLibraryBlockUsers.contains(userID))) {
                     System.out.println("I want to go to Concordia to borrow my book");
                     appendStrToFile("I want to go to Concordia to borrow my book\n");
                     System.out.println("UDP for calling the correct server on the client's behalf");
@@ -610,7 +617,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                     }
                     //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
-                } else if (itemID.substring(0, 3).equals("MCG")) {
+                } else if (itemID.substring(0, 3).equals("MCG") && !(interLibraryBlockUsers.contains(userID))) {
                     System.out.println("I want to go to Mcgill to borrow my book");
                     appendStrToFile("I want to go to Mcgill to borrow my book\n");
                     System.out.println("UDP for calling the correct server on the client's behalf");
@@ -645,7 +652,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                     }
                     //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
-                }else if(itemID.substring(0, 3).equals("MON"))
+                }else if(itemID.substring(0, 3).equals("MON") && !(interLibraryBlockUsers.contains(userID)))
                 {
                     {
                         System.out.println("I want to go to University of Montreal to borrow my book");
@@ -684,7 +691,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
                     }
 
-                }else {
+                }else if(interLibraryBlockUsers.contains(userID)) {
+                    appendStrToFile("You have already borrowed an item from an outside library you cannot borrow another one.\n");
+                    return "You have already borrowed an item from an outside library you cannot borrow another one.";
+                }
+                else{
                     appendStrToFile("There is no suitable server for this item.\n");
                     return "There is no suitable server for this item.";
                 }
@@ -1102,20 +1113,25 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 ArrayList<String> waitHolder = (ArrayList<String>) getWaitlistRec().get(itemID);
                 if (waitHolder.contains(userID)) {
                     appendStrToFile("You are already in the waitlist for this item");
+                    System.out.println("You are already in the waitlist for this item");
                     return ("You are already in the waitlist for this item");
                 } else {
                     getWaitlistRec().remove(itemID);
                     waitHolder.add(userID);
                     getWaitlistRec().put(itemID, waitHolder);
                     appendStrToFile("You have been sucessfully waitlisted for the item " + itemID);
+                    System.out.println("You have been sucessfully waitlisted for the item " + itemID);
+                    System.out.println("The waitlidt for the item" +itemID+" is "+getWaitlistRec().get(itemID));
                     return ("You have been sucessfully waitlisted for the item " + itemID);
                 }
             } else {
                 ArrayList<String> waitHolder = new ArrayList<String>();
                 ArrayList<String> bRecHolder = (ArrayList<String>) getLibBooksRec().get(itemID);
                 waitHolder.add(userID);
-                getWaitlistRec().put(bRecHolder.get(0), waitHolder);
+                getWaitlistRec().put(itemID, waitHolder);
                 appendStrToFile ("You have been sucessfully waitlisted for the item " + itemID);
+                System.out.println("You have been sucessfully waitlisted for the item " + itemID);
+                System.out.println("The waitlidt for the item" +itemID+" is "+getWaitlistRec().get(itemID));
                 return ("You have been sucessfully waitlisted for the item " + itemID);
 
             }
@@ -1156,7 +1172,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
                     int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
                     String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
-
+                    if(finalResult.contains("successfully borrowed"))
+                    {
+                        interLibraryBlockUsers.add(vuserID);
+                        System.out.println("These are the blockec users"+ this.interLibraryBlockUsers);
+                    }
                     String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
                     byte[] b = (rece + "").getBytes();
                     InetAddress ia = null;
@@ -1253,7 +1273,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
                     int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
                     String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
-
+                    if(finalResult.contains("successfully borrowed"))
+                    {
+                        interLibraryBlockUsers.add(vuserID);
+                        System.out.println("These are the blockec users" + this.interLibraryBlockUsers);
+                    }
                     String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
                     System.out.println("The found matches on this server " + rece);
                     appendStrToFile("The found matches on this server " + rece);
@@ -1356,6 +1380,11 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
                         int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
                         String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+                        if(finalResult.contains("successfully borrowed"))
+                        {
+                            interLibraryBlockUsers.add(vuserID);
+                            System.out.println("These are the blockec users" + this.interLibraryBlockUsers);
+                        }
 
                         String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
                         System.out.println("The found matches on this server " + rece);
