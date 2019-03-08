@@ -1382,6 +1382,41 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         System.out.println("At the end " + this.globalString);
                         appendStrToFile("At the end " + this.globalString);
                     }
+                    else if(result.startsWith("L")|| result.startsWith("M") || result.startsWith("N")) {
+                        System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                        appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
+                        System.out.println(result);
+                        System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                        appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                        String finalString = "Items matching your entry at " + getServername() + " are:\n";
+                        finalString = finalString + returnItem( vuserID,  vitemName);
+                        if(finalString.contains("The item has been added to the library"))
+                        {
+                            interLibraryBlockUsers.remove(vuserID);
+                            System.out.println("These are the blocked users"+ this.interLibraryBlockUsers);
+
+                        }
+                        String rece = "S" + ";" + finalString + result.substring(result.indexOf("@"));
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            appendStrToFile("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+
                 }
             }
             if (this.getServername().equals("MCGILL")) {
@@ -1487,6 +1522,40 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         System.out.println("At the end " + this.globalString);
                         appendStrToFile("At the end " + this.globalString);
                     }
+                    else if(result.startsWith("L")|| result.startsWith("M") || result.startsWith("N")) {
+                        System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                        appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
+                        System.out.println(result);
+                        System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                        appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
+                        result = result.trim();
+                        String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                        String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                        String finalString = "Items matching your entry at " + getServername() + " are:\n";
+                        finalString = finalString + returnItem( vuserID,  vitemName);
+                        if(finalString.contains("The item has been added to the library"))
+                        {
+                            interLibraryBlockUsers.remove(vuserID);
+                            System.out.println("These are the blocked users"+ this.interLibraryBlockUsers);
+
+                        }
+                        String rece = "T" + ";" + finalString + result.substring(result.indexOf("@"));
+                        byte[] b = (rece + "").getBytes();
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                            System.out.println("I am sending the packet");
+                            appendStrToFile("I am sending the packet");
+                            this.ds.send(this.dps);
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
 
                 }
             }
@@ -1590,6 +1659,47 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                             }
                         } else if (result.startsWith("P") || result.startsWith("Q") || result.startsWith("R")) {
+                            result = result.trim();
+                            String temp1 = result.substring(2, result.indexOf('@'));
+                            this.globalString = temp1;
+                            System.out.println("At the end " + this.globalString);
+                            appendStrToFile("At the end " + this.globalString);
+                        }
+                        else if(result.startsWith("L")|| result.startsWith("M") || result.startsWith("N")) {
+                            System.out.println("Find the appropriate method to be called and call that using a dummy variable");
+                            appendStrToFile("Find the appropriate method to be called and call that using a dummy variable");
+                            System.out.println(result);
+                            System.out.println("Get back the return string convert it to byte and send it back making prefix as B");
+                            appendStrToFile("Get back the return string convert it to byte and send it back making prefix as B");
+                            result = result.trim();
+                            String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
+                            String vitemName = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
+                            String finalString = "Items matching your entry at " + getServername() + " are:\n";
+                            finalString = finalString + returnItem( vuserID,  vitemName);
+                            if(finalString.contains("The item has been added to the library"))
+                            {
+                                interLibraryBlockUsers.remove(vuserID);
+                                System.out.println("These are the blocked users"+ this.interLibraryBlockUsers);
+
+                            }
+                            String rece = "U" + ";" + finalString + result.substring(result.indexOf("@"));
+                            byte[] b = (rece + "").getBytes();
+                            InetAddress ia = null;
+                            try {
+                                ia = InetAddress.getLocalHost();
+                                this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                                //this.dps = new DatagramPacket(b, b.length, address, Integer.parseInt(result.substring(result.indexOf('|') + 1)));
+                                System.out.println("I am sending the packet");
+                                appendStrToFile("I am sending the packet");
+                                this.ds.send(this.dps);
+                            } catch (UnknownHostException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                        else if (result.startsWith("S") || result.startsWith("T") || result.startsWith("U")) {
                             result = result.trim();
                             String temp1 = result.substring(2, result.indexOf('@'));
                             this.globalString = temp1;
