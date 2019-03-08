@@ -28,7 +28,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
     private Thread t;
     private final Object lock = new Object();
     private int universalPort;
-    private static ArrayList interLibraryBlockUsers;
+    private ArrayList interLibraryBlockUsers;
 
 
     public HashMap<String, ArrayList<String>> getUserUpdateMessages() {
@@ -583,7 +583,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 }
 
             } else {
-                if (itemID.substring(0, 3).equals("CON") && !(interLibraryBlockUsers.contains(userID))) {
+                if (itemID.substring(0, 3).equals("CON") && !(this.interLibraryBlockUsers.contains(userID))) {
                     System.out.println("I want to go to Concordia to borrow my book");
                     appendStrToFile("I want to go to Concordia to borrow my book\n");
                     System.out.println("UDP for calling the correct server on the client's behalf");
@@ -617,7 +617,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                     }
                     //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
-                } else if (itemID.substring(0, 3).equals("MCG") && !(interLibraryBlockUsers.contains(userID))) {
+                } else if (itemID.substring(0, 3).equals("MCG") && !(this.interLibraryBlockUsers.contains(userID))) {
                     System.out.println("I want to go to Mcgill to borrow my book");
                     appendStrToFile("I want to go to Mcgill to borrow my book\n");
                     System.out.println("UDP for calling the correct server on the client's behalf");
@@ -652,7 +652,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                     }
                     //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
-                }else if(itemID.substring(0, 3).equals("MON") && !(interLibraryBlockUsers.contains(userID)))
+                }else if(itemID.substring(0, 3).equals("MON") && !(this.interLibraryBlockUsers.contains(userID)))
                 {
                     {
                         System.out.println("I want to go to University of Montreal to borrow my book");
@@ -691,7 +691,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
                     }
 
-                }else if(interLibraryBlockUsers.contains(userID)) {
+                }else if(this.interLibraryBlockUsers.contains(userID)) {
                     appendStrToFile("You have already borrowed an item from an outside library you cannot borrow another one.\n");
                     return "You have already borrowed an item from an outside library you cannot borrow another one.";
                 }
@@ -918,7 +918,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 }
             } else {
                 {
-                    if (itemID.substring(0, 3).equals("CON") && (interLibraryBlockUsers.contains(userID))) {
+                    if (itemID.substring(0, 3).equals("CON") && (this.interLibraryBlockUsers.contains(userID))) {
                         System.out.println("I want to go to Concordia to return my book");
                         appendStrToFile("I want to go to Concordia to return my book\n");
                         System.out.println("UDP for calling the correct server on the client's behalf");
@@ -957,7 +957,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                         }
                         //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
-                    } else if (itemID.substring(0, 3).equals("MCG") && (interLibraryBlockUsers.contains(userID))) {
+                    } else if (itemID.substring(0, 3).equals("MCG") && (this.interLibraryBlockUsers.contains(userID))) {
                         System.out.println("I want to go to Mcgill to return my book");
                         appendStrToFile("I want to go to Mcgill to return my book\n");
                         System.out.println("UDP for calling the correct server on the client's behalf");
@@ -997,7 +997,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                         }
                         //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
-                    }else if(itemID.substring(0, 3).equals("MON") && (interLibraryBlockUsers.contains(userID)))
+                    }else if(itemID.substring(0, 3).equals("MON") && (this.interLibraryBlockUsers.contains(userID)))
                     {
                         {
                             System.out.println("I want to go to University of Montreal to return my book");
@@ -1041,7 +1041,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
                         }
 
-                    }else if(!(interLibraryBlockUsers.contains(userID))) {
+                    }else if(!(this.interLibraryBlockUsers.contains(userID))) {
                         appendStrToFile("You have never borrowed an item from an outside your own library you cannot return.\n");
                         return "You have never borrowed an item from an outside your own library you cannot return.";
                     }
@@ -1067,19 +1067,53 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         boolean parm2 = itemBorrowedCheck(userID,oldItemID);
         if(parm1 == false)
         {
+            System.out.println("The value of the parm2 to check the availability validation is :false");
             return "The new book you want to borrow is currently not available we cannot process the exchange";
         }
         else if(parm2 == false)
         {
+            System.out.println("The value of the parm2 to check the boroow validation is :false");
             return "The book you want to return in the exchange was never officially take under your ID, hence we cannot process the exchange";
         }
         else if(parm1 == true && parm2 == true)
         {
-            finalString = this.returnItem(userID, oldItemID);
-            try {
-                finalString = finalString + this.borrowItem(userID, newItemID, 1);
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
+            if(userID.substring(0,3).equals(oldItemID.substring(0,3)) && !(this.interLibraryBlockUsers.contains(userID))) {
+                System.out.println("both parm1 and parm 2 are true");
+                finalString = this.returnItem(userID, oldItemID);
+                try {
+                    finalString = finalString + this.borrowItem(userID, newItemID, 1);
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
+            }
+            else if(userID.substring(0,3).equals(oldItemID.substring(0,3)) && (this.interLibraryBlockUsers.contains(userID)))
+            {
+                if(newItemID.substring(0,3).equals(userID.substring(0,3)))
+                {
+                    System.out.println("both parm1 and parm 2 are true");
+                    finalString = this.returnItem(userID, oldItemID);
+                    try {
+                        finalString = finalString + this.borrowItem(userID, newItemID, 1);
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                else
+                {
+                    return "You already have a borrowed book outside your own library, if you want to get another one from outside, please return the foreign library's book first, or get it exchanged with that one.";
+                }
+
+            }
+            else
+            {
+                System.out.println("both parm1 and parm 2 are true");
+                finalString = this.returnItem(userID, oldItemID);
+                try {
+                    finalString = finalString + this.borrowItem(userID, newItemID, 1);
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -1329,11 +1363,18 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                     String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
                     int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
-                    String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+                    String finalResult = null;
+                    if(this.interLibraryBlockUsers.contains(vuserID))
+                    {
+                        finalResult = " You alrrady have a book from "+this.servername+ " this transaction cannot be made.";
+                    }
+                    else {
+                        finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+                    }
                     if(finalResult.contains("successfully borrowed"))
                     {
-                        interLibraryBlockUsers.add(vuserID);
-                        System.out.println("These are the blockec users"+ this.interLibraryBlockUsers);
+                        this.interLibraryBlockUsers.add(vuserID);
+                        System.out.println("These are the blockec users in "+this.servername+ this.interLibraryBlockUsers);
                     }
                     String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
                     byte[] b = (rece + "").getBytes();
@@ -1416,7 +1457,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         finalString = finalString + returnItem( vuserID,  vitemName);
                         if(finalString.contains("The item has been added to the library"))
                         {
-                            interLibraryBlockUsers.remove(vuserID);
+                            this.interLibraryBlockUsers.remove(vuserID);
                             System.out.println("These are the blocked users"+ this.interLibraryBlockUsers);
 
                         }
@@ -1557,11 +1598,18 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                     String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
                     int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
-                    String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+                    String finalResult = null;
+                    if(this.interLibraryBlockUsers.contains(vuserID))
+                    {
+                        finalResult = " You alrrady have a book from "+this.servername+ " this transaction cannot be made.";
+                    }
+                    else {
+                        finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+                    }
                     if(finalResult.contains("successfully borrowed"))
                     {
-                        interLibraryBlockUsers.add(vuserID);
-                        System.out.println("These are the blockec users" + this.interLibraryBlockUsers);
+                        this.interLibraryBlockUsers.add(vuserID);
+                        System.out.println("These are the blockec users"+this.servername + this.interLibraryBlockUsers);
                     }
                     String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
                     System.out.println("The found matches on this server " + rece);
@@ -1648,7 +1696,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         finalString = finalString + returnItem( vuserID,  vitemName);
                         if(finalString.contains("The item has been added to the library"))
                         {
-                            interLibraryBlockUsers.remove(vuserID);
+                            this.interLibraryBlockUsers.remove(vuserID);
                             System.out.println("These are the blocked users"+ this.interLibraryBlockUsers);
 
                         }
@@ -1788,11 +1836,18 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         String vuserID = result.substring(result.indexOf(";") + 1, result.indexOf("#"));
                         String vitemID = result.substring(result.indexOf("#") + 1, result.indexOf("$"));
                         int vnumberOfDays = Integer.parseInt(result.substring(result.indexOf("$") + 1, result.indexOf("@")));
-                        String finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+                        String finalResult = null;
+                        if(this.interLibraryBlockUsers.contains(vuserID))
+                        {
+                            finalResult = " You alrrady have a book from "+this.servername+ " this transaction cannot be made.";
+                        }
+                        else {
+                            finalResult = this.borrowItem(vuserID, vitemID, vnumberOfDays);
+                        }
                         if(finalResult.contains("successfully borrowed"))
                         {
-                            interLibraryBlockUsers.add(vuserID);
-                            System.out.println("These are the blockec users" + this.interLibraryBlockUsers);
+                            this.interLibraryBlockUsers.add(vuserID);
+                            System.out.println("These are the blockec users"+this.servername + this.interLibraryBlockUsers);
                         }
 
                         String rece = "B" + ";" + finalResult + result.substring(result.indexOf("@"));
@@ -1881,7 +1936,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                             finalString = finalString + returnItem( vuserID,  vitemName);
                             if(finalString.contains("The item has been added to the library"))
                             {
-                                interLibraryBlockUsers.remove(vuserID);
+                                this.interLibraryBlockUsers.remove(vuserID);
                                 System.out.println("These are the blocked users"+ this.interLibraryBlockUsers);
 
                             }
