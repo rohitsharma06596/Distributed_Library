@@ -917,8 +917,139 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                     }
                 }
             } else {
-                System.out.println("Make a appropriate UDP call for the inter server item list update");
-            }
+                {
+                    if (itemID.substring(0, 3).equals("CON") && (interLibraryBlockUsers.contains(userID))) {
+                        System.out.println("I want to go to Concordia to return my book");
+                        appendStrToFile("I want to go to Concordia to return my book\n");
+                        System.out.println("UDP for calling the correct server on the client's behalf");
+                        appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+                        String i = "L" + ";" + userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8081);
+                        byte[] b = (i + "").getBytes();
+                        System.out.println(i);
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        }
+                        this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                        try {
+                            System.out.println("I am trying to send return the request");
+                            appendStrToFile("I am trying to send the return request\n");
+                            this.ds.send(dps);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        finalString = finalString + "The call to the remote server has been made \n";
+                        appendStrToFile(finalString);
+                        synchronized (lock) {
+                            try {
+                                lock.wait(10000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println("");
+                            System.out.println("I am in " + getServername());
+                            System.out.println("This is inside the method:" + this.globalString);
+                            finalString = finalString + this.globalString;
+                            appendStrToFile(finalString);
+                            this.globalString = "";
+
+                        }
+                        //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+                    } else if (itemID.substring(0, 3).equals("MCG") && (interLibraryBlockUsers.contains(userID))) {
+                        System.out.println("I want to go to Mcgill to return my book");
+                        appendStrToFile("I want to go to Mcgill to return my book\n");
+                        System.out.println("UDP for calling the correct server on the client's behalf");
+                        appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+                        String i = "M" + ";" + userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8082);
+                        byte[] b = (i + "").getBytes();
+                        System.out.println(i);
+                        InetAddress ia = null;
+                        try {
+                            ia = InetAddress.getLocalHost();
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                        }
+                        this.dps = new DatagramPacket(b, b.length, ia, 9999);
+
+                        try {
+                            this.ds.send(dps);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        finalString = finalString + "The call to the remote server has been made \n";
+                        appendStrToFile(finalString);
+                        synchronized (lock) {
+                            try {
+                                lock.wait(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println("");
+                            System.out.println("I am in " + getServername());
+                            appendStrToFile("I am in " + getServername()+"\n");
+                            System.out.println("This is inside the method:" + this.globalString);
+                            finalString = finalString + this.globalString;
+                            this.globalString = "";
+
+
+                        }
+                        //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+                    }else if(itemID.substring(0, 3).equals("MON") && !(interLibraryBlockUsers.contains(userID)))
+                    {
+                        {
+                            System.out.println("I want to go to University of Montreal to return my book");
+                            appendStrToFile("I want to go to University of Montreal to return my book\n");
+                            System.out.println("UDP for calling the correct server on the client's behalf");
+                            appendStrToFile("UDP for calling the correct server on the client's behalf\n");
+                            String i = "N" + ";" + userID + "#" + itemID + "$" + "@" + Integer.toString(this.universalPort) + "|" + Integer.toString(8083);
+                            byte[] b = (i + "").getBytes();
+                            System.out.println(i);
+                            InetAddress ia = null;
+                            try {
+                                ia = InetAddress.getLocalHost();
+                            } catch (UnknownHostException e) {
+                                e.printStackTrace();
+                            }
+                            this.dps = new DatagramPacket(b, b.length, ia, 9999);
+                            try {
+                                System.out.println("I am trying to send the request");
+                                appendStrToFile("I am trying to send a request\n");
+                                this.ds.send(dps);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            finalString = finalString + "The call to the remote server has been made \n";
+                            appendStrToFile(finalString);
+                            synchronized (lock) {
+                                try {
+                                    lock.wait(10000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                System.out.println("");
+                                System.out.println("I am in " + getServername());
+                                appendStrToFile("I am in \" + getServername()\n");
+                                System.out.println("This is inside the method:" + this.globalString);
+                                finalString = finalString + this.globalString;
+                                appendStrToFile(finalString);
+                                this.globalString = "";
+
+                            }
+                            //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
+                        }
+
+                    }else if(!(interLibraryBlockUsers.contains(userID))) {
+                        appendStrToFile("You have never borrowed an item from an outside your own library you cannot return.\n");
+                        return "You have never borrowed an item from an outside your own library you cannot return.";
+                    }
+                    else{
+                        appendStrToFile("There is no suitable server for this item.\n");
+                        return "There is no suitable server for this item.";
+                    }
+                }            }
         } else {
             finalString = finalString + "The User is not authorized for this action\n";
         }
@@ -927,6 +1058,12 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
         appendStrToFile(finalString);
         return finalString;
 
+    }
+
+    public String exchangeItem(String userID, String newItemID, String oldItemID)
+    {
+
+        return null;
     }
 
     /**This method verifies the ID and the connection
