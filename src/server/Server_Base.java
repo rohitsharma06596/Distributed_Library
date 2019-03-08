@@ -1416,6 +1416,13 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                         }
 
                     }
+                    else if (result.startsWith("S") || result.startsWith("T") || result.startsWith("U")) {
+                        result = result.trim();
+                        String temp1 = result.substring(2, result.indexOf('@'));
+                        this.globalString = temp1;
+                        System.out.println("At the end " + this.globalString);
+                        appendStrToFile("At the end " + this.globalString);
+                    }
 
                 }
             }
