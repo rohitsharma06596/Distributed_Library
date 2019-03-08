@@ -356,6 +356,20 @@ public class Client_Handler {
                     }
 
                 }
+                else if(input.equals("4"))
+                {
+                    System.out.println("Please enter the item ID you want want to return in the exchange");
+                    String returnItemID = sc.nextLine();
+                    System.out.println("Please enter the item ID you want want to borrow in the exchange");
+                    String borrowItemID = sc.nextLine();
+                    System.out.println("Please enter the number of days you want to borrow this item for");
+                    String numberofDays = sc.nextLine();
+                    System.out.println("The call is being made to the server...");
+                    appendStrToFile("The call is being made to the server...");
+                    interacString = objCo.exchangeItem(client.getTotalID(), borrowItemID, returnItemID);
+                    System.out.println(interacString);
+                    appendStrToFile(interacString);
+                }
 
                 else if(input.equals("0"))
                 {

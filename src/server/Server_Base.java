@@ -1062,8 +1062,28 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
     public String exchangeItem(String userID, String newItemID, String oldItemID)
     {
+        String finalString = null;
+        boolean parm1 = itemAvailabilityCheck(newItemID);
+        boolean parm2 = itemBorrowedCheck(userID,oldItemID);
+        if(parm1 == false)
+        {
+            return "The new book you want to borrow is currently not available we cannot process the exchange";
+        }
+        else if(parm2 == false)
+        {
+            return "The book you want to return in the exchange was never officially take under your ID, hence we cannot process the exchange";
+        }
+        else if(parm1 == true && parm2 == true)
+        {
+            finalString = this.returnItem(userID, oldItemID);
+            try {
+                finalString = finalString + this.borrowItem(userID, newItemID, 1);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+        }
 
-        return null;
+        return finalString;
     }
 
     /**This method verifies the ID and the connection
@@ -1120,6 +1140,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             finalString = finalString + "Your options are: \n1. Press 1 for borrowing an item.\n";
             finalString = finalString + "2. Press 2 for finding an item.\n";
             finalString = finalString + "3. Press 3 for returning an item\n";
+            finalString = finalString + "4. Press 4 for exchanging an item you currently own with another one\n";
             finalString = finalString + "0. Press 0 for exit.\n";
             finalString = finalString + "Note: Only select the borrow and remove options if you know the correct item ID.\n";
             finalString = finalString + "Else you can lookup using our find item feature.\n";
@@ -1727,6 +1748,60 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
             this.ds1.close();
             this.ds1 = new DatagramSocket(null);
         }
+
+    }
+
+    public boolean itemBorrowedCheck(String userID, String itemID)
+    {
+        if (itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
+            ArrayList tempList = new ArrayList<String>();
+            tempList = getLendingDetail(itemID);
+            if (tempList.contains(userID)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        else if (itemID.substring(0, 3).equals("CON"))
+        {
+
+        }
+        else if (itemID.substring(0, 3).equals("MCG"))
+        {
+
+        }
+        else if (itemID.substring(0, 3).equals("MON"))
+        {
+
+        }
+        return false;
+
+    }
+    public boolean itemAvailabilityCheck(String itemID)
+    {
+        if (itemID.substring(0, 3).equals(getServername().substring(0, 3))) {
+            ArrayList tempList = new ArrayList<String>();
+            tempList = getBookDetail(itemID);
+            if (Integer.parseInt((String) tempList.get(1)) > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        else if (itemID.substring(0, 3).equals("CON"))
+        {
+
+        }
+        else if (itemID.substring(0, 3).equals("MCG"))
+        {
+
+        }
+        else if (itemID.substring(0, 3).equals("MON"))
+        {
+
+        }
+        return false;
+
 
     }
     @Override

@@ -13,4 +13,5 @@ public interface Interface_server extends Remote{
     public String verify(String ID)throws RemoteException;
     public boolean load_server(String server_name) throws RemoteException;
     public String addToWait(String parm, String itemID, String userID) throws RemoteException;
+    public String exchangeItem(String userID, String newItemID, String oldItemID) throws RemoteException;
 }
