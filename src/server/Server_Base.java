@@ -918,7 +918,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
                 }
             } else {
                 {
-                    if (itemID.substring(0, 3).equals("CON") && (this.interLibraryBlockUsers.contains(userID))) {
+                    if (itemID.substring(0, 3).equals("CON") ) {
                         System.out.println("I want to go to Concordia to return my book");
                         appendStrToFile("I want to go to Concordia to return my book\n");
                         System.out.println("UDP for calling the correct server on the client's behalf");
@@ -957,7 +957,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                         }
                         //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
-                    } else if (itemID.substring(0, 3).equals("MCG") && (this.interLibraryBlockUsers.contains(userID))) {
+                    } else if (itemID.substring(0, 3).equals("MCG")) {
                         System.out.println("I want to go to Mcgill to return my book");
                         appendStrToFile("I want to go to Mcgill to return my book\n");
                         System.out.println("UDP for calling the correct server on the client's behalf");
@@ -997,7 +997,7 @@ public class Server_Base extends UnicastRemoteObject implements Interface_server
 
                         }
                         //finalString = finalString + "This item does not exist in " + getServername() + ".\n";
-                    }else if(itemID.substring(0, 3).equals("MON") && (this.interLibraryBlockUsers.contains(userID)))
+                    }else if(itemID.substring(0, 3).equals("MON"))
                     {
                         {
                             System.out.println("I want to go to University of Montreal to return my book");
